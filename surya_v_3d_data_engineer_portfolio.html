@@ -1,0 +1,2253 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Surya V | Data Engineer — Distributed Pipelines, PySpark & Cloud Architecture</title>
+  <meta name="description" content="Portfolio of Surya V, Data Engineer specializing in Python, PySpark, SQL, Hadoop, Apache NiFi, Apache Airflow, and AWS cloud data pipelines." />
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            void: '#050505',
+            charcoal: '#101114',
+            surface: '#16181D',
+            cyanAccent: '#00D4FF',
+            purpleAccent: '#8B5CF6',
+          },
+          animation: {
+            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'float': 'float 6s ease-in-out infinite',
+            'flow-dash': 'flowDash 1.8s linear infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-10px)' },
+            },
+            flowDash: {
+              '0%': { strokeDashoffset: '24' },
+              '100%': { strokeDashoffset: '0' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --bg-primary: #050505;
+      --bg-secondary: #101114;
+      --accent-cyan: #00D4FF;
+      --accent-purple: #8B5CF6;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: #F8FAFC;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow-x: hidden;
+      selection-background-color: rgba(0, 212, 255, 0.3);
+    }
+
+    ::selection {
+      background: rgba(0, 212, 255, 0.25);
+      color: #00D4FF;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #050505;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1E293B;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #00D4FF;
+    }
+
+    /* Glassmorphism Utilities */
+    .glass-panel {
+      background: rgba(16, 17, 20, 0.68);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .glass-card {
+      background: linear-gradient(145deg, rgba(22, 24, 29, 0.85) 0%, rgba(12, 13, 16, 0.92) 100%);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+    }
+
+    .glass-card:hover {
+      border-color: rgba(0, 212, 255, 0.35);
+      box-shadow: 0 12px 40px -12px rgba(0, 212, 255, 0.15), 0 0 20px -5px rgba(139, 92, 246, 0.12);
+    }
+
+    /* 3D Tilt Skill Card */
+    .tilt-card {
+      transform-style: preserve-3d;
+      perspective: 1000px;
+      will-change: transform;
+    }
+
+    .tilt-inner {
+      transform: translateZ(20px);
+    }
+
+    /* Subtle Ambient Grid */
+    .bg-tech-grid {
+      background-size: 48px 48px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    }
+
+    /* Custom Desktop Cursor */
+    @media (pointer: fine) {
+      #custom-cursor-dot, #custom-cursor-ring {
+        display: block;
+      }
+    }
+    @media (pointer: coarse) {
+      #custom-cursor-dot, #custom-cursor-ring {
+        display: none !important;
+      }
+    }
+
+    /* Reveal Animations */
+    .reveal-section {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal-section.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Pipeline Connector Pulse */
+    @keyframes packetMoveHorizontal {
+      0% { left: 0%; opacity: 0; }
+      15% { opacity: 1; }
+      85% { opacity: 1; }
+      100% { left: 100%; opacity: 0; }
+    }
+    .data-packet-h {
+      animation: packetMoveHorizontal 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    /* Print Styles for Resume Export */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printable-resume-area, #printable-resume-area * {
+        visibility: visible;
+      }
+      #printable-resume-area {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white !important;
+        color: #111827 !important;
+        padding: 24px !important;
+        box-shadow: none !important;
+        border: none !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-void text-slate-100 antialiased relative selection:bg-cyanAccent/20 selection:text-cyanAccent">
+
+  <!-- Initialization Loading Screen -->
+  <div id="loader-screen" class="fixed inset-0 z-[100] bg-void flex flex-col items-center justify-center transition-opacity duration-700">
+    <div class="relative w-24 h-24 mb-8 flex items-center justify-center">
+      <div class="absolute inset-0 rounded-full border-2 border-cyanAccent/20 animate-ping"></div>
+      <div class="absolute inset-2 rounded-full border-t-2 border-r-2 border-cyanAccent animate-spin"></div>
+      <div class="absolute inset-5 rounded-full border-b-2 border-l-2 border-purpleAccent animate-spin" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
+      <i data-lucide="database" class="w-7 h-7 text-cyanAccent"></i>
+    </div>
+    <div class="font-mono text-xs tracking-[0.25em] uppercase text-cyanAccent mb-2">Initializing Distributed Cluster</div>
+    <div class="w-64 h-1 bg-white/10 rounded-full overflow-hidden">
+      <div id="loader-bar" class="h-full bg-gradient-to-r from-cyanAccent to-purpleAccent w-0 transition-all duration-300"></div>
+    </div>
+    <div id="loader-status" class="font-mono text-[11px] text-slate-500 mt-3">Mounting PySpark & Airflow Nodes...</div>
+  </div>
+
+  <!-- Custom Desktop Cursor -->
+  <div id="custom-cursor-dot" class="hidden fixed w-2 h-2 bg-cyanAccent rounded-full pointer-events-none z-[90] -translate-x-1/2 -translate-y-1/2 transition-transform duration-75"></div>
+  <div id="custom-cursor-ring" class="hidden fixed w-9 h-9 border border-cyanAccent/40 rounded-full pointer-events-none z-[89] -translate-x-1/2 -translate-y-1/2 transition-all duration-200 ease-out"></div>
+
+  <!-- Top Scroll Progress Bar -->
+  <div class="fixed top-0 left-0 right-0 h-[2px] z-[70] bg-white/5">
+    <div id="scroll-progress" class="h-full bg-gradient-to-r from-cyanAccent via-blue-400 to-purpleAccent w-0 transition-all duration-75"></div>
+  </div>
+
+  <!-- Floating Glassmorphic Navigation -->
+  <header id="navbar" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] w-[94%] max-w-6xl transition-all duration-300">
+    <nav class="glass-panel rounded-2xl px-4 sm:px-6 py-3 flex items-center justify-between shadow-2xl shadow-black/60">
+      <!-- Brand Logo -->
+      <a href="#hero" class="flex items-center gap-3 group">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyanAccent/20 to-purpleAccent/20 border border-cyanAccent/30 flex items-center justify-center group-hover:border-cyanAccent transition-colors">
+          <span class="font-mono font-bold text-sm text-cyanAccent">SV</span>
+        </div>
+        <div class="flex flex-col">
+          <span class="font-bold text-sm tracking-tight text-white leading-none">SURYA V</span>
+          <span class="font-mono text-[10px] text-slate-400 tracking-wider mt-1">DATA ENGINEER</span>
+        </div>
+      </a>
+
+      <!-- Desktop Navigation Links -->
+      <div class="hidden lg:flex items-center gap-1 bg-white/[0.03] p-1 rounded-xl border border-white/[0.05]">
+        <a href="#about" data-nav="about" class="nav-link px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition-all">About</a>
+        <a href="#experience" data-nav="experience" class="nav-link px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition-all">Experience</a>
+        <a href="#skills" data-nav="skills" class="nav-link px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition-all">Skills</a>
+        <a href="#projects" data-nav="projects" class="nav-link px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition-all">Featured Project</a>
+        <a href="#education" data-nav="education" class="nav-link px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition-all">Credentials</a>
+        <a href="#contact" data-nav="contact" class="nav-link px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition-all">Contact</a>
+      </div>
+
+      <!-- Desktop Right Actions -->
+      <div class="hidden sm:flex items-center gap-2.5">
+        <button onclick="openResumeModal()" class="px-3.5 py-2 rounded-xl text-xs font-medium text-slate-200 bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex items-center gap-1.5">
+          <i data-lucide="file-text" class="w-3.5 h-3.5 text-cyanAccent"></i>
+          <span>Resume</span>
+        </button>
+        <a href="#contact" class="px-4 py-2 rounded-xl text-xs font-semibold text-void bg-cyanAccent hover:bg-cyan-300 transition-all shadow-lg shadow-cyanAccent/20">
+          Hire Me
+        </a>
+      </div>
+
+      <!-- Mobile Hamburger Button -->
+      <button id="mobile-menu-btn" aria-label="Toggle Menu" class="lg:hidden p-2 rounded-xl bg-white/5 border border-white/10 text-slate-200 hover:text-cyanAccent transition-colors">
+        <i data-lucide="menu" class="w-5 h-5"></i>
+      </button>
+    </nav>
+
+    <!-- Mobile Navigation Drawer -->
+    <div id="mobile-menu" class="hidden lg:hidden mt-2 glass-panel rounded-2xl p-4 border border-white/10 shadow-2xl">
+      <div class="flex flex-col gap-1.5">
+        <a href="#about" class="mobile-nav-item px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-cyanAccent">About Me</a>
+        <a href="#experience" class="mobile-nav-item px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-cyanAccent">Experience</a>
+        <a href="#skills" class="mobile-nav-item px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-cyanAccent">Technical Skills</a>
+        <a href="#projects" class="mobile-nav-item px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-cyanAccent">Featured Project</a>
+        <a href="#education" class="mobile-nav-item px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-cyanAccent">Education & Certifications</a>
+        <a href="#contact" class="mobile-nav-item px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-cyanAccent">Contact</a>
+        <div class="pt-2 mt-2 border-t border-white/10 flex gap-2">
+          <button onclick="openResumeModal()" class="flex-1 py-2.5 rounded-xl text-xs font-semibold bg-white/5 border border-white/10 text-white flex items-center justify-center gap-2">
+            <i data-lucide="download" class="w-3.5 h-3.5 text-cyanAccent"></i> Resume
+          </button>
+          <a href="#contact" class="mobile-nav-item flex-1 py-2.5 rounded-xl text-xs font-semibold bg-cyanAccent text-void text-center">
+            Get in Touch
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== 1. HERO SECTION – IMMERSIVE 3D EXPERIENCE ==================== -->
+  <section id="hero" class="relative min-h-screen w-full flex items-center justify-center overflow-hidden pt-24 pb-16">
+    <!-- Interactive 3D WebGL Canvas Container -->
+    <div id="hero-3d-container" class="absolute inset-0 z-0 cursor-grab active:cursor-grabbing"></div>
+
+    <!-- Ambient Radial Vignettes for Readability -->
+    <div class="absolute inset-0 z-[1] pointer-events-none bg-gradient-to-b from-void/40 via-void/30 to-void"></div>
+    <div class="absolute inset-0 z-[1] pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,#050505_85%)]"></div>
+
+    <!-- Hero Foreground Content -->
+    <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex flex-col items-center text-center">
+      <!-- Availability Pill -->
+      <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full glass-panel border border-cyanAccent/25 mb-8 animate-fade-in">
+        <span class="relative flex h-2.5 w-2.5">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400"></span>
+        </span>
+        <span class="font-mono text-xs tracking-wide text-slate-200">Available for Data Engineering Opportunities</span>
+      </div>
+
+      <!-- Main Heading -->
+      <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white max-w-4xl leading-[1.08] mb-6">
+        Building Intelligent
+        <span class="block mt-1 bg-gradient-to-r from-cyanAccent via-sky-300 to-purpleAccent bg-clip-text text-transparent">
+          Data Pipelines at Scale.
+        </span>
+      </h1>
+
+      <!-- Subheading -->
+      <p class="text-base sm:text-xl text-slate-300/90 max-w-2xl leading-relaxed font-normal mb-10">
+        Hi, I'm <strong class="text-white font-semibold">Surya V</strong> — Data Engineer specializing in 
+        <span class="text-cyanAccent font-mono text-sm sm:text-base">Python</span>, 
+        <span class="text-cyanAccent font-mono text-sm sm:text-base">PySpark</span>, 
+        <span class="text-cyanAccent font-mono text-sm sm:text-base">SQL</span>, 
+        <span class="text-purpleAccent font-mono text-sm sm:text-base">Hadoop</span>, 
+        <span class="text-purpleAccent font-mono text-sm sm:text-base">Apache Airflow</span>, and 
+        <span class="text-cyanAccent font-mono text-sm sm:text-base">AWS</span>.
+      </p>
+
+      <!-- CTA Button Cluster -->
+      <div class="flex flex-wrap items-center justify-center gap-4 w-full sm:w-auto">
+        <a href="#projects" class="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-cyanAccent hover:bg-cyan-300 text-void font-bold text-sm transition-all shadow-[0_0_30px_rgba(0,212,255,0.35)] hover:shadow-[0_0_40px_rgba(0,212,255,0.55)] flex items-center justify-center gap-2 group">
+          <span>Explore My Work</span>
+          <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+        </a>
+
+        <button onclick="openResumeModal()" class="w-full sm:w-auto px-7 py-3.5 rounded-xl glass-panel hover:bg-white/10 text-white font-semibold text-sm border border-white/15 hover:border-cyanAccent/40 transition-all flex items-center justify-center gap-2">
+          <i data-lucide="download" class="w-4 h-4 text-cyanAccent"></i>
+          <span>Download Resume</span>
+        </button>
+
+        <a href="#contact" class="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-charcoal/80 hover:bg-surface text-slate-200 font-semibold text-sm border border-white/10 hover:border-purpleAccent/40 transition-all flex items-center justify-center gap-2">
+          <i data-lucide="terminal" class="w-4 h-4 text-purpleAccent"></i>
+          <span>Contact Me</span>
+        </a>
+      </div>
+
+      <!-- Interactive 3D Scene Hint -->
+      <div class="mt-10 flex items-center gap-2 text-[11px] font-mono text-slate-500">
+        <i data-lucide="move-3d" class="w-3.5 h-3.5 text-cyanAccent/70"></i>
+        <span>Move cursor or drag to orbit live distributed cluster telemetry</span>
+      </div>
+    </div>
+
+    <!-- Scroll Down Indicator -->
+    <a href="#about" aria-label="Scroll to About" class="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 text-slate-400 hover:text-cyanAccent transition-colors">
+      <span class="font-mono text-[10px] tracking-[0.2em] uppercase">Scroll</span>
+      <div class="w-5 h-8 rounded-full border border-white/20 flex items-start justify-center p-1">
+        <div class="w-1 h-2 rounded-full bg-cyanAccent animate-bounce"></div>
+      </div>
+    </a>
+  </section>
+
+  <!-- ==================== 2. ABOUT ME SECTION ==================== -->
+  <section id="about" class="relative py-24 sm:py-32 bg-void bg-tech-grid border-t border-white/[0.06] reveal-section">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Section Header -->
+      <div class="flex items-center gap-3 mb-4">
+        <span class="font-mono text-xs uppercase tracking-[0.2em] text-cyanAccent">01 // Profile & Architecture</span>
+        <div class="h-px flex-1 max-w-[100px] bg-gradient-to-r from-cyanAccent/50 to-transparent"></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <!-- Left Content Column -->
+        <div class="lg:col-span-7 space-y-6">
+          <h2 class="text-3xl sm:text-5xl font-bold tracking-tight text-white leading-tight">
+            Engineering Data. <br/>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyanAccent to-purpleAccent">Creating Impact.</span>
+          </h2>
+
+          <div class="space-y-4 text-slate-300 text-base sm:text-[17px] leading-relaxed">
+            <p>
+              I'm a Data Engineer with <strong class="text-white font-semibold">1.5+ years of experience</strong> in Data Engineering and Production Support at <strong class="text-white font-semibold">Wipro Technologies</strong>.
+            </p>
+            <p>
+              I work with enterprise-scale data processing workflows supporting <span class="text-cyanAccent font-medium">Mastercard programs</span> and clearing-data processing systems.
+            </p>
+            <p>
+              My experience includes working with <span class="text-slate-100 font-medium">Apache NiFi ingestion pipelines</span>, <span class="text-slate-100 font-medium">Hadoop/Spark processing environments</span>, <span class="text-slate-100 font-medium">PySpark transformations</span>, <span class="text-slate-100 font-medium">SQL validation</span>, production monitoring, and troubleshooting data pipeline failures.
+            </p>
+            <p class="text-slate-400">
+              I'm passionate about building reliable, scalable, and efficient data engineering solutions and continuously expanding my knowledge of cloud data platforms.
+            </p>
+          </div>
+
+          <!-- Verified Key Focus Pillars -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
+            <div class="glass-card rounded-2xl p-4">
+              <div class="font-mono text-2xl font-bold text-cyanAccent">1.5+ Yrs</div>
+              <div class="text-xs text-slate-400 mt-1">Enterprise Data Engineering & Production Ops</div>
+            </div>
+            <div class="glass-card rounded-2xl p-4">
+              <div class="font-mono text-2xl font-bold text-purpleAccent">Batch & ETL</div>
+              <div class="text-xs text-slate-400 mt-1">NiFi, Hadoop, Spark & PySpark Workflows</div>
+            </div>
+            <div class="glass-card rounded-2xl p-4">
+              <div class="font-mono text-2xl font-bold text-emerald-400">Data Integrity</div>
+              <div class="text-xs text-slate-400 mt-1">SQL Reconciliation & SLA Recovery</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Interactive 3D Data Node Cube Visualization -->
+        <div class="lg:col-span-5">
+          <div class="glass-card rounded-3xl p-4 sm:p-6 relative overflow-hidden border border-white/10">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-cyanAccent"></span>
+                <span class="font-mono text-xs text-slate-300">3D PIPELINE TOPOLOGY</span>
+              </div>
+              <span class="font-mono text-[10px] px-2.5 py-1 rounded-md bg-white/5 text-slate-400">Interactive Node</span>
+            </div>
+
+            <!-- 3D Mini Canvas -->
+            <div id="about-3d-container" class="w-full h-[320px] sm:h-[360px] rounded-2xl bg-void/80 border border-white/[0.06] relative cursor-grab active:cursor-grabbing overflow-hidden">
+              <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none z-10">
+                <span class="font-mono text-[10px] text-slate-400 bg-void/80 px-2.5 py-1 rounded-md border border-white/10">Drag to rotate topology</span>
+                <span class="font-mono text-[10px] text-cyanAccent bg-cyanAccent/10 px-2.5 py-1 rounded-md border border-cyanAccent/20">SPARK • HADOOP • S3</span>
+              </div>
+            </div>
+
+            <!-- Compact Career Timeline Strip -->
+            <div class="mt-5 pt-4 border-t border-white/10 space-y-3">
+              <div class="flex items-start gap-3">
+                <div class="w-2 h-2 rounded-full bg-cyanAccent mt-2 shrink-0"></div>
+                <div>
+                  <div class="text-xs font-semibold text-white">Scholar Trainee – Data Engineering</div>
+                  <div class="text-[11px] text-slate-400">Wipro Technologies Pvt Ltd • Mar 2025 – Present</div>
+                </div>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="w-2 h-2 rounded-full bg-purpleAccent mt-2 shrink-0"></div>
+                <div>
+                  <div class="text-xs font-semibold text-white">B.Sc. in Computer Science</div>
+                  <div class="text-[11px] text-slate-400">Bharathidasan University • Aug 2020 – May 2023</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 3. PROFESSIONAL EXPERIENCE ==================== -->
+  <section id="experience" class="relative py-24 sm:py-32 bg-charcoal/50 border-t border-white/[0.06] reveal-section">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Header -->
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-6">
+        <div>
+          <div class="flex items-center gap-3 mb-3">
+            <span class="font-mono text-xs uppercase tracking-[0.2em] text-purpleAccent">02 // Enterprise Experience</span>
+            <div class="h-px w-16 bg-gradient-to-r from-purpleAccent/50 to-transparent"></div>
+          </div>
+          <h2 class="text-3xl sm:text-5xl font-bold text-white tracking-tight">Production Data Engineering</h2>
+        </div>
+
+        <!-- Role Badge -->
+        <div class="glass-panel rounded-2xl p-4 border border-cyanAccent/20 flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyanAccent/20 to-purpleAccent/20 border border-white/10 flex items-center justify-center shrink-0">
+            <i data-lucide="building-2" class="w-6 h-6 text-cyanAccent"></i>
+          </div>
+          <div>
+            <div class="text-base font-bold text-white">Wipro Technologies Pvt Ltd</div>
+            <div class="text-xs text-cyanAccent font-medium">Scholar Trainee – Data Engineering</div>
+            <div class="font-mono text-[11px] text-slate-400 mt-0.5">March 2025 – Present • Chennai, India</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Enterprise Clearing Data Pipeline Visualizer -->
+      <div class="glass-card rounded-3xl p-6 sm:p-8 mb-14 border border-white/10 relative overflow-hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-8">
+          <div>
+            <span class="font-mono text-[11px] uppercase tracking-wider text-cyanAccent bg-cyanAccent/10 px-3 py-1 rounded-full border border-cyanAccent/20">
+              Illustrative Representation of Enterprise Clearing Workflow
+            </span>
+            <h3 class="text-lg sm:text-xl font-bold text-white mt-3">Mastercard Clearing Data Processing Flow</h3>
+          </div>
+          <span class="font-mono text-xs text-slate-400">Click any stage to inspect operational duties</span>
+        </div>
+
+        <!-- 5-Node Horizontal / Responsive Pipeline Diagram -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 relative items-center">
+          <!-- Stage 1 -->
+          <button onclick="selectExpStage(0)" class="exp-stage-btn group text-left p-4 rounded-2xl bg-void/90 border border-cyanAccent/50 shadow-[0_0_25px_rgba(0,212,255,0.12)] transition-all relative">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-mono text-[10px] text-cyanAccent">STAGE 01</span>
+              <i data-lucide="server" class="w-4 h-4 text-cyanAccent"></i>
+            </div>
+            <div class="font-bold text-sm text-white">Source Files</div>
+            <div class="text-[11px] text-slate-400 mt-1">Enterprise File Servers</div>
+            <!-- Connector Pulse on Desktop -->
+            <div class="hidden md:block absolute -right-4 top-1/2 -translate-y-1/2 w-4 h-[2px] bg-white/15 z-10 overflow-hidden">
+              <div class="w-2 h-full bg-cyanAccent data-packet-h"></div>
+            </div>
+          </button>
+
+          <!-- Stage 2 -->
+          <button onclick="selectExpStage(1)" class="exp-stage-btn group text-left p-4 rounded-2xl bg-void/70 border border-white/10 hover:border-cyanAccent/40 transition-all relative">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-mono text-[10px] text-slate-400 group-hover:text-cyanAccent">STAGE 02</span>
+              <i data-lucide="git-merge" class="w-4 h-4 text-purpleAccent"></i>
+            </div>
+            <div class="font-bold text-sm text-white">Apache NiFi</div>
+            <div class="text-[11px] text-slate-400 mt-1">Automated File Ingestion</div>
+            <div class="hidden md:block absolute -right-4 top-1/2 -translate-y-1/2 w-4 h-[2px] bg-white/15 z-10 overflow-hidden">
+              <div class="w-2 h-full bg-cyanAccent data-packet-h" style="animation-delay: 0.4s;"></div>
+            </div>
+          </button>
+
+          <!-- Stage 3 -->
+          <button onclick="selectExpStage(2)" class="exp-stage-btn group text-left p-4 rounded-2xl bg-void/70 border border-white/10 hover:border-cyanAccent/40 transition-all relative">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-mono text-[10px] text-slate-400 group-hover:text-cyanAccent">STAGE 03</span>
+              <i data-lucide="cpu" class="w-4 h-4 text-cyanAccent"></i>
+            </div>
+            <div class="font-bold text-sm text-white">Hadoop / Spark</div>
+            <div class="text-[11px] text-slate-400 mt-1">PySpark Batch Processing</div>
+            <div class="hidden md:block absolute -right-4 top-1/2 -translate-y-1/2 w-4 h-[2px] bg-white/15 z-10 overflow-hidden">
+              <div class="w-2 h-full bg-purpleAccent data-packet-h" style="animation-delay: 0.8s;"></div>
+            </div>
+          </button>
+
+          <!-- Stage 4 -->
+          <button onclick="selectExpStage(3)" class="exp-stage-btn group text-left p-4 rounded-2xl bg-void/70 border border-white/10 hover:border-cyanAccent/40 transition-all relative">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-mono text-[10px] text-slate-400 group-hover:text-cyanAccent">STAGE 04</span>
+              <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
+            </div>
+            <div class="font-bold text-sm text-white">Data Validation</div>
+            <div class="text-[11px] text-slate-400 mt-1">SQL & Record-Level Checks</div>
+            <div class="hidden md:block absolute -right-4 top-1/2 -translate-y-1/2 w-4 h-[2px] bg-white/15 z-10 overflow-hidden">
+              <div class="w-2 h-full bg-emerald-400 data-packet-h" style="animation-delay: 1.2s;"></div>
+            </div>
+          </button>
+
+          <!-- Stage 5 -->
+          <button onclick="selectExpStage(4)" class="exp-stage-btn group text-left p-4 rounded-2xl bg-void/70 border border-white/10 hover:border-cyanAccent/40 transition-all relative">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-mono text-[10px] text-slate-400 group-hover:text-cyanAccent">STAGE 05</span>
+              <i data-lucide="layers" class="w-4 h-4 text-purpleAccent"></i>
+            </div>
+            <div class="font-bold text-sm text-white">Downstream Systems</div>
+            <div class="text-[11px] text-slate-400 mt-1">Enterprise Clearing Delivery</div>
+          </button>
+        </div>
+
+        <!-- Dynamic Stage Detail Box -->
+        <div id="exp-stage-detail" class="mt-6 p-4 rounded-2xl bg-void/80 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg bg-cyanAccent/15 border border-cyanAccent/30 flex items-center justify-center shrink-0 mt-0.5">
+              <i data-lucide="info" class="w-4 h-4 text-cyanAccent"></i>
+            </div>
+            <div>
+              <div id="exp-stage-title" class="text-sm font-bold text-white">Source Clearing Files & Enterprise File Servers</div>
+              <p id="exp-stage-desc" class="text-xs sm:text-sm text-slate-300 mt-1">
+                Monitoring incoming Mastercard clearing files delivered via enterprise file servers, verifying file arrival schedules, completeness, and upstream readiness prior to ingestion.
+              </p>
+            </div>
+          </div>
+          <span id="exp-stage-tag" class="font-mono text-[11px] text-cyanAccent bg-cyanAccent/10 px-3 py-1.5 rounded-lg border border-cyanAccent/20 shrink-0 self-start sm:self-center">
+            Upstream Ingestion
+          </span>
+        </div>
+      </div>
+
+      <!-- 11 Verified Responsibilities Grid -->
+      <div class="mb-6 flex items-center justify-between">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <i data-lucide="check-circle-2" class="w-5 h-5 text-cyanAccent"></i>
+          <span>Core Responsibilities & Production Operations</span>
+        </h3>
+        <span class="font-mono text-xs text-slate-400">11 Key Deliverables</span>
+      </div>
+
+      <div id="responsibilities-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Populated via JS for clean maintainability -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 4. TECHNICAL SKILLS – INTERACTIVE 3D MATRIX ==================== -->
+  <section id="skills" class="relative py-24 sm:py-32 bg-void bg-tech-grid border-t border-white/[0.06] reveal-section">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Header -->
+      <div class="text-center max-w-2xl mx-auto mb-12">
+        <span class="font-mono text-xs uppercase tracking-[0.2em] text-cyanAccent">03 // Technology Stack</span>
+        <h2 class="text-3xl sm:text-5xl font-bold text-white tracking-tight mt-3">Interactive Skills Matrix</h2>
+        <p class="text-slate-400 text-sm sm:text-base mt-3">
+          Hover or tap any technology node to inspect architectural usage across distributed batch workflows, cloud storage, and production environments.
+        </p>
+      </div>
+
+      <!-- Category Filter Tabs -->
+      <div id="skill-filters" class="flex flex-wrap items-center justify-center gap-2 mb-12">
+        <button data-cat="All" class="skill-filter-btn active px-4 py-2 rounded-xl text-xs font-semibold bg-cyanAccent text-void shadow-lg shadow-cyanAccent/20 transition-all">All Technologies (22)</button>
+        <button data-cat="Programming" class="skill-filter-btn px-4 py-2 rounded-xl text-xs font-medium bg-charcoal text-slate-300 border border-white/10 hover:border-cyanAccent/40 transition-all">Programming</button>
+        <button data-cat="Big Data" class="skill-filter-btn px-4 py-2 rounded-xl text-xs font-medium bg-charcoal text-slate-300 border border-white/10 hover:border-cyanAccent/40 transition-all">Big Data</button>
+        <button data-cat="Workflow Orchestration" class="skill-filter-btn px-4 py-2 rounded-xl text-xs font-medium bg-charcoal text-slate-300 border border-white/10 hover:border-cyanAccent/40 transition-all">Workflow Orchestration</button>
+        <button data-cat="Cloud" class="skill-filter-btn px-4 py-2 rounded-xl text-xs font-medium bg-charcoal text-slate-300 border border-white/10 hover:border-cyanAccent/40 transition-all">Cloud (AWS)</button>
+        <button data-cat="Databases" class="skill-filter-btn px-4 py-2 rounded-xl text-xs font-medium bg-charcoal text-slate-300 border border-white/10 hover:border-cyanAccent/40 transition-all">Databases</button>
+        <button data-cat="Operating Systems" class="skill-filter-btn px-4 py-2 rounded-xl text-xs font-medium bg-charcoal text-slate-300 border border-white/10 hover:border-cyanAccent/40 transition-all">Operating Systems</button>
+        <button data-cat="Tools" class="skill-filter-btn px-4 py-2 rounded-xl text-xs font-medium bg-charcoal text-slate-300 border border-white/10 hover:border-cyanAccent/40 transition-all">Tools</button>
+      </div>
+
+      <!-- 3D Tilt Skill Cards Grid -->
+      <div id="skills-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Populated dynamically with 3D tilt handlers -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 5. FEATURED PROJECT – AI-POWERED FRAUD DETECTION ==================== -->
+  <section id="projects" class="relative py-24 sm:py-32 bg-charcoal/50 border-t border-white/[0.06] reveal-section">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Header -->
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+        <div>
+          <div class="flex items-center gap-3 mb-3">
+            <span class="font-mono text-xs uppercase tracking-[0.2em] text-cyanAccent">04 // Flagship Engineering Case Study</span>
+            <div class="h-px w-16 bg-gradient-to-r from-cyanAccent/50 to-transparent"></div>
+          </div>
+          <h2 class="text-3xl sm:text-5xl font-bold text-white tracking-tight">Featured Project</h2>
+        </div>
+
+        <button onclick="openArchitectureModal()" class="self-start md:self-auto px-5 py-3 rounded-xl bg-cyanAccent/10 hover:bg-cyanAccent/20 text-cyanAccent border border-cyanAccent/30 font-semibold text-xs flex items-center gap-2 transition-all">
+          <i data-lucide="network" class="w-4 h-4"></i>
+          <span>View Full Architecture Blueprint</span>
+        </button>
+      </div>
+
+      <!-- Main Flagship Showcase Container -->
+      <div class="glass-card rounded-3xl p-6 sm:p-10 border border-white/10 shadow-2xl">
+        <!-- Project Title & Summary -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-10 border-b border-white/10">
+          <div class="lg:col-span-8 space-y-4">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purpleAccent/15 border border-purpleAccent/30 text-purpleAccent font-mono text-xs">
+              <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
+              <span>End-to-End Batch ML & Data Lakehouse Pipeline</span>
+            </div>
+
+            <h3 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+              AI-Powered Transaction Fraud Detection & Data Pipeline
+            </h3>
+
+            <p class="text-slate-300 text-base sm:text-lg leading-relaxed">
+              Built an end-to-end batch data pipeline for processing and analyzing large-scale transaction datasets using <span class="text-cyanAccent font-medium">PySpark</span> and <span class="text-cyanAccent font-medium">Python</span>, orchestrated with Apache Airflow and backed by multi-layered AWS S3 storage and PostgreSQL analytical serving.
+            </p>
+
+            <!-- Tech Stack Badges -->
+            <div class="flex flex-wrap gap-2 pt-2">
+              <span class="px-3 py-1 rounded-lg bg-void border border-white/10 font-mono text-xs text-cyanAccent">Python</span>
+              <span class="px-3 py-1 rounded-lg bg-void border border-white/10 font-mono text-xs text-cyanAccent">PySpark</span>
+              <span class="px-3 py-1 rounded-lg bg-void border border-white/10 font-mono text-xs text-slate-200">SQL</span>
+              <span class="px-3 py-1 rounded-lg bg-void border border-white/10 font-mono text-xs text-purpleAccent">Apache Airflow</span>
+              <span class="px-3 py-1 rounded-lg bg-void border border-white/10 font-mono text-xs text-amber-300">AWS S3</span>
+              <span class="px-3 py-1 rounded-lg bg-void border border-white/10 font-mono text-xs text-sky-300">PostgreSQL</span>
+              <span class="px-3 py-1 rounded-lg bg-void border border-white/10 font-mono text-xs text-emerald-300">Machine Learning</span>
+              <span class="px-3 py-1 rounded-lg bg-void border border-white/10 font-mono text-xs text-blue-300">Docker</span>
+            </div>
+          </div>
+
+          <!-- Action & Layer Summary Card -->
+          <div class="lg:col-span-4 flex flex-col justify-between bg-void/70 rounded-2xl p-5 border border-white/10 space-y-5">
+            <div>
+              <div class="font-mono text-xs text-slate-400 uppercase tracking-wider mb-3">S3 Data Lake Zones</div>
+              <div class="space-y-2 text-xs">
+                <div class="flex items-center justify-between p-2 rounded-lg bg-white/[0.03]">
+                  <span class="text-slate-300">01. Raw Layer</span>
+                  <span class="font-mono text-cyanAccent">Immutable Ingestion</span>
+                </div>
+                <div class="flex items-center justify-between p-2 rounded-lg bg-white/[0.03]">
+                  <span class="text-slate-300">02. Processed Layer</span>
+                  <span class="font-mono text-sky-300">Cleansed & Deduplicated</span>
+                </div>
+                <div class="flex items-center justify-between p-2 rounded-lg bg-white/[0.03]">
+                  <span class="text-slate-300">03. Feature Layer</span>
+                  <span class="font-mono text-purpleAccent">ML Feature Vectors</span>
+                </div>
+                <div class="flex items-center justify-between p-2 rounded-lg bg-white/[0.03]">
+                  <span class="text-slate-300">04. Prediction Layer</span>
+                  <span class="font-mono text-emerald-400">Scored Transactions</span>
+                </div>
+              </div>
+            </div>
+
+            <button onclick="openArchitectureModal()" class="w-full py-3 rounded-xl bg-cyanAccent hover:bg-cyan-300 text-void font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-cyanAccent/20">
+              <i data-lucide="eye" class="w-4 h-4"></i>
+              <span>View Architecture</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Interactive 10-Stage Pipeline Diagram -->
+        <div class="py-10 border-b border-white/10">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+            <div>
+              <h4 class="text-lg font-bold text-white flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-cyanAccent animate-ping"></span>
+                <span>Interactive 10-Stage Data & ML Pipeline</span>
+              </h4>
+              <p class="text-xs text-slate-400 mt-1">Click any component node below to inspect its pipeline role, input/output flow, and technical implementation.</p>
+            </div>
+            <div class="font-mono text-[11px] text-cyanAccent bg-cyanAccent/10 px-3 py-1 rounded-lg border border-cyanAccent/20 self-start">
+              Live Data Particle Flow Active
+            </div>
+          </div>
+
+          <!-- 10-Node Interactive Grid with Animated Flow -->
+          <div id="fraud-pipeline-nodes" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+            <!-- Populated dynamically -->
+          </div>
+
+          <!-- Selected Node Inspector Panel -->
+          <div id="fraud-node-inspector" class="mt-6 rounded-2xl bg-void/90 border border-cyanAccent/30 p-5 sm:p-6 transition-all">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/10">
+              <div class="flex items-center gap-3">
+                <div id="fnode-badge" class="px-3 py-1 rounded-lg bg-cyanAccent/15 text-cyanAccent font-mono text-xs font-bold">
+                  STEP 01 / 10
+                </div>
+                <h5 id="fnode-title" class="text-lg font-bold text-white">Transaction Sources</h5>
+              </div>
+              <span id="fnode-tech" class="font-mono text-xs text-purpleAccent bg-purpleAccent/10 px-3 py-1 rounded-lg border border-purpleAccent/20 self-start md:self-auto">
+                Batch Transaction Feeds
+              </span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 text-xs sm:text-sm">
+              <div class="md:col-span-2">
+                <div class="font-mono text-[11px] uppercase text-slate-500 mb-1">Engineering Role & Purpose</div>
+                <p id="fnode-desc" class="text-slate-200 leading-relaxed">
+                  Generates and supplies high-volume financial transaction records containing timestamps, merchant metadata, transaction amounts, and account identifiers for batch ingestion.
+                </p>
+              </div>
+              <div class="bg-white/[0.03] rounded-xl p-3.5 border border-white/5">
+                <div class="font-mono text-[11px] uppercase text-slate-500 mb-1">Data Flow Contract</div>
+                <div id="fnode-io" class="font-mono text-xs text-cyanAccent">
+                  Input: Raw Transaction Events → Output: S3 Raw Landing Zone
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 8 Core Project Capabilities -->
+        <div class="pt-10">
+          <h4 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+            <i data-lucide="cpu" class="w-5 h-5 text-purpleAccent"></i>
+            <span>Implemented Pipeline Capabilities</span>
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="p-4 rounded-2xl bg-void/70 border border-white/10 hover:border-cyanAccent/30 transition-colors">
+              <div class="font-mono text-xs text-cyanAccent mb-1.5">01 // INGESTION</div>
+              <div class="text-sm font-semibold text-white">Raw transaction data ingestion into Amazon S3</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-void/70 border border-white/10 hover:border-cyanAccent/30 transition-colors">
+              <div class="font-mono text-xs text-cyanAccent mb-1.5">02 // MEDALLION ZONES</div>
+              <div class="text-sm font-semibold text-white">Separate raw, processed, feature, and prediction data layers</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-void/70 border border-white/10 hover:border-cyanAccent/30 transition-colors">
+              <div class="font-mono text-xs text-cyanAccent mb-1.5">03 // DISTRIBUTED ETL</div>
+              <div class="text-sm font-semibold text-white">PySpark transformations for data cleansing</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-void/70 border border-white/10 hover:border-cyanAccent/30 transition-colors">
+              <div class="font-mono text-xs text-cyanAccent mb-1.5">04 // DATA QUALITY</div>
+              <div class="text-sm font-semibold text-white">Schema validation and duplicate handling</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-void/70 border border-white/10 hover:border-purpleAccent/30 transition-colors">
+              <div class="font-mono text-xs text-purpleAccent mb-1.5">05 // AGGREGATIONS</div>
+              <div class="text-sm font-semibold text-white">Transaction filtering and aggregation</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-void/70 border border-white/10 hover:border-purpleAccent/30 transition-colors">
+              <div class="font-mono text-xs text-purpleAccent mb-1.5">06 // ML SCORING</div>
+              <div class="text-sm font-semibold text-white">Random Forest machine learning classification</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-void/70 border border-white/10 hover:border-purpleAccent/30 transition-colors">
+              <div class="font-mono text-xs text-purpleAccent mb-1.5">07 // WAREHOUSING</div>
+              <div class="text-sm font-semibold text-white">Fraud prediction results stored in PostgreSQL</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-void/70 border border-white/10 hover:border-purpleAccent/30 transition-colors">
+              <div class="font-mono text-xs text-purpleAccent mb-1.5">08 // BI & REPORTING</div>
+              <div class="text-sm font-semibold text-white">Analytical querying and reporting</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 6. EDUCATION & CERTIFICATIONS ==================== -->
+  <section id="education" class="relative py-24 sm:py-32 bg-void bg-tech-grid border-t border-white/[0.06] reveal-section">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <!-- Education Column -->
+        <div class="lg:col-span-5">
+          <span class="font-mono text-xs uppercase tracking-[0.2em] text-cyanAccent">05 // Academic Foundation</span>
+          <h2 class="text-3xl sm:text-4xl font-bold text-white tracking-tight mt-3 mb-8">Education</h2>
+
+          <div class="relative pl-8 border-l-2 border-cyanAccent/30 space-y-8">
+            <div class="relative glass-card rounded-2xl p-6">
+              <div class="absolute -left-[41px] top-6 w-4 h-4 rounded-full bg-void border-2 border-cyanAccent shadow-[0_0_12px_#00D4FF]"></div>
+              <span class="font-mono text-xs text-cyanAccent bg-cyanAccent/10 px-3 py-1 rounded-full border border-cyanAccent/20">
+                August 2020 – May 2023
+              </span>
+              <h3 class="text-xl font-bold text-white mt-4">Bachelor's Degree in Computer Science</h3>
+              <p class="text-slate-300 font-medium text-sm mt-1 flex items-center gap-2">
+                <i data-lucide="graduation-cap" class="w-4 h-4 text-purpleAccent"></i>
+                <span>Bharathidasan University</span>
+              </p>
+              <p class="text-xs text-slate-400 mt-3 leading-relaxed">
+                Foundational coursework in Database Management Systems, Data Structures, Algorithms, Operating Systems, and Distributed Computing principles.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Certifications Column -->
+        <div class="lg:col-span-7">
+          <span class="font-mono text-xs uppercase tracking-[0.2em] text-purpleAccent">06 // Verified Credentials</span>
+          <h2 class="text-3xl sm:text-4xl font-bold text-white tracking-tight mt-3 mb-8">Certifications</h2>
+
+          <div class="space-y-4">
+            <!-- Cert 1 -->
+            <div class="glass-card rounded-2xl p-5 sm:p-6 flex items-center justify-between gap-4 group">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <i data-lucide="cloud" class="w-6 h-6 text-amber-400"></i>
+                </div>
+                <div>
+                  <h3 class="text-base sm:text-lg font-bold text-white group-hover:text-cyanAccent transition-colors">
+                    AWS Certified Cloud Practitioner
+                  </h3>
+                  <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Amazon Web Services (AWS) • Cloud Foundations & Core Services</p>
+                </div>
+              </div>
+              <span class="hidden sm:inline-flex items-center gap-1.5 font-mono text-[11px] text-emerald-400 bg-emerald-400/10 px-3 py-1 rounded-full border border-emerald-400/20">
+                <i data-lucide="badge-check" class="w-3.5 h-3.5"></i> Certified
+              </span>
+            </div>
+
+            <!-- Cert 2 -->
+            <div class="glass-card rounded-2xl p-5 sm:p-6 flex items-center justify-between gap-4 group">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/25 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <i data-lucide="sparkles" class="w-6 h-6 text-sky-400"></i>
+                </div>
+                <div>
+                  <h3 class="text-base sm:text-lg font-bold text-white group-hover:text-cyanAccent transition-colors">
+                    Microsoft Azure AI Fundamentals (AI-900)
+                  </h3>
+                  <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Microsoft • Machine Learning & Artificial Intelligence Workloads</p>
+                </div>
+              </div>
+              <span class="hidden sm:inline-flex items-center gap-1.5 font-mono text-[11px] text-emerald-400 bg-emerald-400/10 px-3 py-1 rounded-full border border-emerald-400/20">
+                <i data-lucide="badge-check" class="w-3.5 h-3.5"></i> Certified
+              </span>
+            </div>
+
+            <!-- Cert 3 -->
+            <div class="glass-card rounded-2xl p-5 sm:p-6 flex items-center justify-between gap-4 group">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-purpleAccent/15 border border-purpleAccent/30 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <i data-lucide="database-zap" class="w-6 h-6 text-purpleAccent"></i>
+                </div>
+                <div>
+                  <h3 class="text-base sm:text-lg font-bold text-white group-hover:text-cyanAccent transition-colors">
+                    Data Engineering Bootcamp – Udemy
+                  </h3>
+                  <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Udemy • End-to-End ETL Pipelines, Spark, SQL & Data Warehousing</p>
+                </div>
+              </div>
+              <span class="hidden sm:inline-flex items-center gap-1.5 font-mono text-[11px] text-cyanAccent bg-cyanAccent/10 px-3 py-1 rounded-full border border-cyanAccent/20">
+                <i data-lucide="award" class="w-3.5 h-3.5"></i> Completed
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 7. CONTACT SECTION ==================== -->
+  <section id="contact" class="relative py-24 sm:py-32 bg-charcoal/60 border-t border-white/[0.06] overflow-hidden reveal-section">
+    <!-- Subtle 3D Particle Background Canvas -->
+    <div id="contact-3d-container" class="absolute inset-0 z-0 opacity-45 pointer-events-none"></div>
+
+    <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        <!-- Left Contact Info Column -->
+        <div class="lg:col-span-5 space-y-6">
+          <span class="font-mono text-xs uppercase tracking-[0.2em] text-cyanAccent">07 // Connect & Collaborate</span>
+          <h2 class="text-3xl sm:text-5xl font-bold text-white tracking-tight leading-tight">
+            Let's Build Something <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyanAccent to-purpleAccent">Great Together.</span>
+          </h2>
+          <p class="text-slate-300 text-base leading-relaxed">
+            I'm open to Data Engineering opportunities, cloud data projects, collaborations, and interesting technical challenges.
+          </p>
+
+          <!-- Direct Contact Cards with Click-to-Copy -->
+          <div class="space-y-3 pt-2">
+            <!-- Email -->
+            <div class="glass-card rounded-2xl p-4 flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3.5 min-w-0">
+                <div class="w-10 h-10 rounded-xl bg-cyanAccent/10 border border-cyanAccent/25 flex items-center justify-center shrink-0">
+                  <i data-lucide="mail" class="w-4 h-4 text-cyanAccent"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="font-mono text-[10px] uppercase text-slate-400">Email</div>
+                  <a href="mailto:developer.surya03@gmail.com" class="text-sm font-semibold text-white hover:text-cyanAccent truncate block">
+                    developer.surya03@gmail.com
+                  </a>
+                </div>
+              </div>
+              <button onclick="copyText('developer.surya03@gmail.com', 'Email')" aria-label="Copy Email" class="p-2 rounded-lg bg-white/5 hover:bg-cyanAccent/20 text-slate-300 hover:text-cyanAccent transition-colors shrink-0">
+                <i data-lucide="copy" class="w-4 h-4"></i>
+              </button>
+            </div>
+
+            <!-- Phone -->
+            <div class="glass-card rounded-2xl p-4 flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-purpleAccent/10 border border-purpleAccent/25 flex items-center justify-center shrink-0">
+                  <i data-lucide="phone" class="w-4 h-4 text-purpleAccent"></i>
+                </div>
+                <div>
+                  <div class="font-mono text-[10px] uppercase text-slate-400">Phone</div>
+                  <a href="tel:+918110944016" class="text-sm font-semibold text-white hover:text-cyanAccent">
+                    +91 8110944016
+                  </a>
+                </div>
+              </div>
+              <button onclick="copyText('+91 8110944016', 'Phone number')" aria-label="Copy Phone" class="p-2 rounded-lg bg-white/5 hover:bg-purpleAccent/20 text-slate-300 hover:text-purpleAccent transition-colors shrink-0">
+                <i data-lucide="copy" class="w-4 h-4"></i>
+              </button>
+            </div>
+
+            <!-- Location -->
+            <div class="glass-card rounded-2xl p-4 flex items-center gap-3.5">
+              <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center shrink-0">
+                <i data-lucide="map-pin" class="w-4 h-4 text-emerald-400"></i>
+              </div>
+              <div>
+                <div class="font-mono text-[10px] uppercase text-slate-400">Location</div>
+                <div class="text-sm font-semibold text-white">Chennai, Tamil Nadu, India</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Action & Social Links -->
+          <div class="flex flex-wrap gap-3 pt-2">
+            <a href="mailto:developer.surya03@gmail.com" class="px-5 py-3 rounded-xl bg-cyanAccent hover:bg-cyan-300 text-void font-bold text-xs transition-all flex items-center gap-2 shadow-lg shadow-cyanAccent/20">
+              <i data-lucide="send" class="w-3.5 h-3.5"></i>
+              <span>Email Me</span>
+            </a>
+
+            <button onclick="openResumeModal()" class="px-5 py-3 rounded-xl glass-panel hover:bg-white/10 text-white font-semibold text-xs border border-white/15 transition-all flex items-center gap-2">
+              <i data-lucide="file-down" class="w-3.5 h-3.5 text-cyanAccent"></i>
+              <span>Download Resume</span>
+            </button>
+
+            <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn Profile" class="px-4 py-3 rounded-xl bg-void border border-white/10 hover:border-cyanAccent/40 text-slate-200 hover:text-cyanAccent text-xs font-medium transition-all flex items-center gap-2">
+              <i data-lucide="linkedin" class="w-4 h-4"></i>
+              <span>LinkedIn</span>
+            </a>
+
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label="GitHub Profile" class="px-4 py-3 rounded-xl bg-void border border-white/10 hover:border-purpleAccent/40 text-slate-200 hover:text-purpleAccent text-xs font-medium transition-all flex items-center gap-2">
+              <i data-lucide="github" class="w-4 h-4"></i>
+              <span>GitHub</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Right Contact Form Column -->
+        <div class="lg:col-span-7">
+          <form id="contact-form" novalidate class="glass-card rounded-3xl p-6 sm:p-8 border border-white/10 space-y-5 shadow-2xl">
+            <div class="flex items-center justify-between pb-2 border-b border-white/10">
+              <div class="font-mono text-xs text-cyanAccent">DIRECT MESSAGE DISPATCHER</div>
+              <div class="font-mono text-[11px] text-slate-500">Encrypted TLS Form</div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="contact-name" class="block text-xs font-medium text-slate-300 mb-2">Your Name *</label>
+                <input id="contact-name" name="name" type="text" required placeholder="Recruiter / Engineering Lead" class="w-full px-4 py-3 rounded-xl bg-void/90 border border-white/10 focus:border-cyanAccent focus:outline-none text-sm text-white placeholder-slate-600 transition-colors" />
+              </div>
+              <div>
+                <label for="contact-email" class="block text-xs font-medium text-slate-300 mb-2">Email Address *</label>
+                <input id="contact-email" name="email" type="email" required placeholder="name@company.com" class="w-full px-4 py-3 rounded-xl bg-void/90 border border-white/10 focus:border-cyanAccent focus:outline-none text-sm text-white placeholder-slate-600 transition-colors" />
+              </div>
+            </div>
+
+            <div>
+              <label for="contact-subject" class="block text-xs font-medium text-slate-300 mb-2">Subject *</label>
+              <input id="contact-subject" name="subject" type="text" required placeholder="Data Engineer Opportunity / Pipeline Collaboration" class="w-full px-4 py-3 rounded-xl bg-void/90 border border-white/10 focus:border-cyanAccent focus:outline-none text-sm text-white placeholder-slate-600 transition-colors" />
+            </div>
+
+            <div>
+              <label for="contact-message" class="block text-xs font-medium text-slate-300 mb-2">Message *</label>
+              <textarea id="contact-message" name="message" rows="4" required placeholder="Tell me about your data engineering team, tech stack, or role..." class="w-full px-4 py-3 rounded-xl bg-void/90 border border-white/10 focus:border-cyanAccent focus:outline-none text-sm text-white placeholder-slate-600 transition-colors resize-none"></textarea>
+            </div>
+
+            <!-- Status Alert Banner -->
+            <div id="form-feedback" class="hidden rounded-xl p-3.5 text-xs font-medium"></div>
+
+            <button id="contact-submit-btn" type="submit" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyanAccent to-sky-400 hover:from-cyan-300 hover:to-sky-300 text-void font-bold text-sm transition-all shadow-lg shadow-cyanAccent/20 flex items-center justify-center gap-2">
+              <i data-lucide="send" class="w-4 h-4"></i>
+              <span>Send Message</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="bg-void border-t border-white/[0.08] py-10">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-cyanAccent/15 border border-cyanAccent/30 flex items-center justify-center font-mono font-bold text-xs text-cyanAccent">
+          SV
+        </div>
+        <div class="text-xs text-slate-400">
+          © <span id="footer-year">2026</span> <strong class="text-white">Surya V</strong>. Engineered for Distributed Data Systems.
+        </div>
+      </div>
+
+      <div class="flex items-center gap-6 text-xs text-slate-400">
+        <a href="#hero" class="hover:text-cyanAccent transition-colors">Top</a>
+        <a href="#experience" class="hover:text-cyanAccent transition-colors">Experience</a>
+        <a href="#projects" class="hover:text-cyanAccent transition-colors">Fraud Pipeline</a>
+        <button onclick="openResumeModal()" class="hover:text-cyanAccent transition-colors">Resume</button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Floating Back-to-Top Button -->
+  <button id="back-to-top" aria-label="Back to Top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-6 right-6 z-50 w-11 h-11 rounded-xl glass-panel border border-cyanAccent/30 text-cyanAccent hover:bg-cyanAccent hover:text-void shadow-xl transition-all opacity-0 pointer-events-none translate-y-4 flex items-center justify-center">
+    <i data-lucide="arrow-up" class="w-5 h-5"></i>
+  </button>
+
+  <!-- Toast Notification -->
+  <div id="toast-notification" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[80] px-4 py-2.5 rounded-xl glass-panel border border-cyanAccent/40 text-xs font-mono text-white shadow-2xl opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-2">
+    <i data-lucide="check-circle" class="w-4 h-4 text-cyanAccent"></i>
+    <span id="toast-message">Copied to clipboard</span>
+  </div>
+
+  <!-- ==================== ARCHITECTURE BLUEPRINT MODAL ==================== -->
+  <div id="architecture-modal" class="fixed inset-0 z-[85] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div class="glass-card w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border border-cyanAccent/30 p-6 sm:p-8 relative shadow-2xl">
+      <div class="flex items-center justify-between pb-4 border-b border-white/10">
+        <div>
+          <span class="font-mono text-xs text-cyanAccent uppercase tracking-wider">System Blueprint</span>
+          <h3 class="text-xl sm:text-2xl font-bold text-white mt-1">AI-Powered Transaction Fraud Detection Architecture</h3>
+        </div>
+        <button onclick="closeArchitectureModal()" aria-label="Close Architecture Modal" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Visual SVG Architecture Flow -->
+      <div class="my-6 p-5 rounded-2xl bg-void border border-white/10 overflow-x-auto">
+        <div class="min-w-[680px] space-y-6">
+          <!-- Layer 1: Ingestion & Storage -->
+          <div class="grid grid-cols-3 gap-4 items-center">
+            <div class="p-4 rounded-xl bg-charcoal border border-white/10 text-center">
+              <div class="font-mono text-[10px] text-slate-400">SOURCE</div>
+              <div class="font-bold text-sm text-white mt-1">Transaction Sources</div>
+              <div class="text-[11px] text-slate-400 mt-1">Batch Transaction Records</div>
+            </div>
+            <div class="p-4 rounded-xl bg-charcoal border border-amber-400/30 text-center">
+              <div class="font-mono text-[10px] text-amber-300">STORAGE LAYER 1</div>
+              <div class="font-bold text-sm text-white mt-1">Amazon S3 – Raw Layer</div>
+              <div class="text-[11px] text-slate-400 mt-1">Immutable Partitioned Landing</div>
+            </div>
+            <div class="p-4 rounded-xl bg-charcoal border border-purpleAccent/40 text-center">
+              <div class="font-mono text-[10px] text-purpleAccent">ORCHESTRATOR</div>
+              <div class="font-bold text-sm text-white mt-1">Apache Airflow</div>
+              <div class="text-[11px] text-slate-400 mt-1">DAG Scheduling & Retries</div>
+            </div>
+          </div>
+
+          <!-- Arrow Divider -->
+          <div class="flex justify-center">
+            <div class="px-4 py-1 rounded-full bg-cyanAccent/10 border border-cyanAccent/25 font-mono text-[11px] text-cyanAccent">
+              ↓ Distributed Spark Execution & Medallion Transformations ↓
+            </div>
+          </div>
+
+          <!-- Layer 2: PySpark & ML -->
+          <div class="grid grid-cols-4 gap-3 items-center">
+            <div class="p-3.5 rounded-xl bg-charcoal border border-cyanAccent/30 text-center">
+              <div class="font-mono text-[10px] text-cyanAccent">COMPUTE</div>
+              <div class="font-bold text-xs text-white mt-1">PySpark Processing</div>
+            </div>
+            <div class="p-3.5 rounded-xl bg-charcoal border border-cyanAccent/30 text-center">
+              <div class="font-mono text-[10px] text-cyanAccent">QUALITY</div>
+              <div class="font-bold text-xs text-white mt-1">Data Cleaning & Validation</div>
+            </div>
+            <div class="p-3.5 rounded-xl bg-charcoal border border-purpleAccent/30 text-center">
+              <div class="font-mono text-[10px] text-purpleAccent">FEATURES</div>
+              <div class="font-bold text-xs text-white mt-1">Feature Engineering</div>
+            </div>
+            <div class="p-3.5 rounded-xl bg-charcoal border border-emerald-400/30 text-center">
+              <div class="font-mono text-[10px] text-emerald-400">CLASSIFIER</div>
+              <div class="font-bold text-xs text-white mt-1">Random Forest Model</div>
+            </div>
+          </div>
+
+          <!-- Arrow Divider -->
+          <div class="flex justify-center">
+            <div class="px-4 py-1 rounded-full bg-purpleAccent/10 border border-purpleAccent/25 font-mono text-[11px] text-purpleAccent">
+              ↓ Scored Predictions & Analytical Serving ↓
+            </div>
+          </div>
+
+          <!-- Layer 3: Serving -->
+          <div class="grid grid-cols-3 gap-4 items-center">
+            <div class="p-4 rounded-xl bg-charcoal border border-emerald-400/30 text-center">
+              <div class="font-mono text-[10px] text-emerald-400">OUTPUT LAYER</div>
+              <div class="font-bold text-sm text-white mt-1">Fraud Predictions</div>
+              <div class="text-[11px] text-slate-400 mt-1">S3 Prediction Layer</div>
+            </div>
+            <div class="p-4 rounded-xl bg-charcoal border border-sky-400/30 text-center">
+              <div class="font-mono text-[10px] text-sky-300">RELATIONAL DB</div>
+              <div class="font-bold text-sm text-white mt-1">PostgreSQL</div>
+              <div class="text-[11px] text-slate-400 mt-1">Indexed Analytical Tables</div>
+            </div>
+            <div class="p-4 rounded-xl bg-charcoal border border-cyanAccent/30 text-center">
+              <div class="font-mono text-[10px] text-cyanAccent">CONSUMPTION</div>
+              <div class="font-bold text-sm text-white mt-1">Analytics Dashboard</div>
+              <div class="text-[11px] text-slate-400 mt-1">SQL Reporting & Fraud Insights</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="text-xs text-slate-400">
+          Containerized environment managed with <span class="text-white font-mono">Docker</span> across all batch processing stages.
+        </div>
+        <button onclick="closeArchitectureModal()" class="px-5 py-2.5 rounded-xl bg-cyanAccent text-void font-bold text-xs">
+          Done Inspecting
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== RESUME PREVIEW & DOWNLOAD MODAL ==================== -->
+  <div id="resume-modal" class="fixed inset-0 z-[85] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div class="glass-card w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl border border-white/15 p-6 sm:p-8 relative shadow-2xl">
+      <!-- Modal Toolbar -->
+      <div class="no-print flex flex-wrap items-center justify-between gap-3 pb-4 mb-6 border-b border-white/10">
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="file-check-2" class="w-5 h-5 text-cyanAccent"></i>
+          <span class="font-bold text-sm text-white">Surya_V_Data_Engineer_Resume.pdf</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="downloadHtmlResume()" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors">
+            <i data-lucide="download" class="w-3.5 h-3.5 text-cyanAccent"></i>
+            <span>Download File</span>
+          </button>
+          <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-cyanAccent hover:bg-cyan-300 text-void text-xs font-bold flex items-center gap-1.5 transition-colors">
+            <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+            <span>Save as PDF / Print</span>
+          </button>
+          <button onclick="closeResumeModal()" aria-label="Close Resume Modal" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Formatted Resume Sheet -->
+      <div id="printable-resume-area" class="bg-white text-slate-900 rounded-2xl p-6 sm:p-10 shadow-inner space-y-6">
+        <!-- Header -->
+        <div class="border-b-2 border-slate-900 pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <h1 class="text-3xl font-extrabold tracking-tight text-slate-950">SURYA V</h1>
+            <p class="text-sm font-bold text-sky-700 uppercase tracking-wider mt-1">Data Engineer</p>
+          </div>
+          <div class="text-xs text-slate-700 space-y-1 sm:text-right font-medium">
+            <div>Chennai, Tamil Nadu, India</div>
+            <div>+91 8110944016 • developer.surya03@gmail.com</div>
+          </div>
+        </div>
+
+        <!-- Professional Summary -->
+        <div>
+          <h2 class="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-1 mb-2">Professional Summary</h2>
+          <p class="text-xs leading-relaxed text-slate-700">
+            Data Engineer with 1.5+ years of experience in Data Engineering and Production Support at Wipro Technologies, working with enterprise-scale data processing workflows supporting Mastercard programs and clearing-data processing systems. Experienced in Apache NiFi ingestion pipelines, Hadoop/Spark processing environments, PySpark transformations, SQL validation, production monitoring, and troubleshooting data pipeline failures.
+          </p>
+        </div>
+
+        <!-- Technical Skills -->
+        <div>
+          <h2 class="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-1 mb-2">Technical Skills</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-1.5 gap-x-6 text-xs text-slate-700">
+            <div><strong class="text-slate-950">Programming:</strong> Python, SQL</div>
+            <div><strong class="text-slate-950">Big Data:</strong> Apache Spark, PySpark, Hadoop, HDFS, YARN</div>
+            <div><strong class="text-slate-950">Orchestration:</strong> Apache Airflow</div>
+            <div><strong class="text-slate-950">Cloud (AWS):</strong> AWS S3, AWS EC2, AWS IAM, AWS RDS</div>
+            <div><strong class="text-slate-950">Databases:</strong> PostgreSQL, Oracle</div>
+            <div><strong class="text-slate-950">OS & Tools:</strong> Linux, Unix, Shell Scripting, Apache NiFi, Git, Docker, Jira, Remedy</div>
+          </div>
+        </div>
+
+        <!-- Experience -->
+        <div>
+          <h2 class="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-1 mb-2">Professional Experience</h2>
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline mb-1.5">
+            <div class="text-sm font-bold text-slate-950">Scholar Trainee – Data Engineering | Wipro Technologies Pvt Ltd</div>
+            <div class="text-xs font-semibold text-slate-600">March 2025 – Present</div>
+          </div>
+          <ul class="list-disc pl-4 space-y-1 text-xs text-slate-700 leading-relaxed">
+            <li>Supporting enterprise-scale Mastercard clearing-data processing workflows and source clearing files received through enterprise file servers.</li>
+            <li>Supporting Apache NiFi ingestion pipelines and Hadoop/Spark/PySpark processing workflows.</li>
+            <li>Performing data transformation, validation, record-level checks, and SQL validation for missing records, duplicates, and discrepancies.</li>
+            <li>Monitoring scheduled batch-processing workflows, analyzing application logs, Spark job status, and upstream/downstream dependencies.</li>
+            <li>Investigating production failures across ingestion, NiFi, Hadoop, and Spark; supporting job recovery, controlled reruns, and collaborating with L2/application support teams.</li>
+          </ul>
+        </div>
+
+        <!-- Featured Project -->
+        <div>
+          <h2 class="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-1 mb-2">Featured Project</h2>
+          <div class="text-sm font-bold text-slate-950">AI-Powered Transaction Fraud Detection & Data Pipeline</div>
+          <div class="text-[11px] font-semibold text-sky-700 mb-1.5">Python, PySpark, SQL, Apache Airflow, AWS S3, PostgreSQL, Machine Learning, Docker</div>
+          <ul class="list-disc pl-4 space-y-1 text-xs text-slate-700 leading-relaxed">
+            <li>Built an end-to-end batch data pipeline for processing and analyzing large-scale transaction datasets using PySpark and Python.</li>
+            <li>Architected separate raw, processed, feature, and prediction data layers on Amazon S3 orchestrated via Apache Airflow.</li>
+            <li>Implemented PySpark transformations for data cleansing, schema validation, duplicate handling, and transaction filtering/aggregation.</li>
+            <li>Applied Random Forest machine learning classification and stored fraud prediction results in PostgreSQL for analytical querying and reporting.</li>
+          </ul>
+        </div>
+
+        <!-- Education & Certifications -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <h2 class="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-1 mb-2">Education</h2>
+            <div class="text-xs font-bold text-slate-950">Bachelor's Degree in Computer Science</div>
+            <div class="text-xs text-slate-700">Bharathidasan University • Aug 2020 – May 2023</div>
+          </div>
+          <div>
+            <h2 class="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-1 mb-2">Certifications</h2>
+            <ul class="list-disc pl-4 text-xs text-slate-700 space-y-0.5">
+              <li>AWS Certified Cloud Practitioner</li>
+              <li>Microsoft Azure AI Fundamentals (AI-900)</li>
+              <li>Data Engineering Bootcamp – Udemy</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT APPLICATION LOGIC ==================== -->
+  <script>
+    // Initialize Lucide Icons safely
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+      initLoader();
+      renderResponsibilities();
+      renderSkills('All');
+      renderFraudPipeline();
+      initScrollObservers();
+      initCustomCursor();
+      initMobileMenu();
+      initContactForm();
+    });
+
+    // ==================== 1. LOADING SCREEN ====================
+    function initLoader() {
+      const loader = document.getElementById('loader-screen');
+      const bar = document.getElementById('loader-bar');
+      const status = document.getElementById('loader-status');
+
+      const steps = [
+        { pct: '35%', text: 'Initializing Three.js Distributed Cluster...' },
+        { pct: '70%', text: 'Mounting PySpark & NiFi Telemetry...' },
+        { pct: '100%', text: 'Environment Ready.' }
+      ];
+
+      let i = 0;
+      const interval = setInterval(() => {
+        if (i < steps.length) {
+          bar.style.width = steps[i].pct;
+          status.textContent = steps[i].text;
+          i++;
+        } else {
+          clearInterval(interval);
+          setTimeout(() => {
+            loader.style.opacity = '0';
+            setTimeout(() => {
+              loader.style.display = 'none';
+            }, 650);
+          }, 220);
+        }
+      }, 260);
+    }
+
+    // ==================== 2. CUSTOM DESKTOP CURSOR ====================
+    function initCustomCursor() {
+      const dot = document.getElementById('custom-cursor-dot');
+      const ring = document.getElementById('custom-cursor-ring');
+      if (!dot || !ring) return;
+
+      let mouseX = -100, mouseY = -100;
+      let ringX = -100, ringY = -100;
+
+      window.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        dot.style.left = `${mouseX}px`;
+        dot.style.top = `${mouseY}px`;
+      });
+
+      function animateRing() {
+        ringX += (mouseX - ringX) * 0.16;
+        ringY += (mouseY - ringY) * 0.16;
+        ring.style.left = `${ringX}px`;
+        ring.style.top = `${ringY}px`;
+        requestAnimationFrame(animateRing);
+      }
+      animateRing();
+
+      document.querySelectorAll('a, button, input, textarea').forEach((el) => {
+        el.addEventListener('mouseenter', () => {
+          ring.style.width = '48px';
+          ring.style.height = '48px';
+          ring.style.borderColor = 'rgba(0, 212, 255, 0.85)';
+        });
+        el.addEventListener('mouseleave', () => {
+          ring.style.width = '36px';
+          ring.style.height = '36px';
+          ring.style.borderColor = 'rgba(0, 212, 255, 0.4)';
+        });
+      });
+    }
+
+    // ==================== 3. SCROLL PROGRESS, ACTIVE NAV & REVEAL ====================
+    function initScrollObservers() {
+      const progress = document.getElementById('scroll-progress');
+      const backToTop = document.getElementById('back-to-top');
+      const sections = document.querySelectorAll('section[id]');
+      const navLinks = document.querySelectorAll('.nav-link');
+
+      window.addEventListener('scroll', () => {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const scrollPercent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+        if (progress) progress.style.width = `${scrollPercent}%`;
+
+        // Back to top button visibility
+        if (backToTop) {
+          if (scrollTop > 500) {
+            backToTop.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+          } else {
+            backToTop.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+          }
+        }
+
+        // Active section highlight
+        let current = '';
+        sections.forEach((sec) => {
+          const top = sec.offsetTop - 180;
+          if (scrollTop >= top) {
+            current = sec.getAttribute('id');
+          }
+        });
+
+        navLinks.forEach((link) => {
+          link.classList.remove('bg-white/10', 'text-cyanAccent');
+          link.classList.add('text-slate-400');
+          if (link.dataset.nav === current) {
+            link.classList.add('bg-white/10', 'text-cyanAccent');
+            link.classList.remove('text-slate-400');
+          }
+        });
+      }, { passive: true });
+
+      // IntersectionObserver for smooth reveal
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+          }
+        });
+      }, { threshold: 0.12 });
+
+      document.querySelectorAll('.reveal-section').forEach((el) => observer.observe(el));
+    }
+
+    function initMobileMenu() {
+      const btn = document.getElementById('mobile-menu-btn');
+      const menu = document.getElementById('mobile-menu');
+      if (!btn || !menu) return;
+
+      btn.addEventListener('click', () => {
+        menu.classList.toggle('hidden');
+      });
+
+      document.querySelectorAll('.mobile-nav-item').forEach((item) => {
+        item.addEventListener('click', () => {
+          menu.classList.add('hidden');
+        });
+      });
+    }
+
+    // ==================== 4. EXPERIENCE PIPELINE & 11 RESPONSIBILITIES ====================
+    const expStages = [
+      {
+        title: "Source Clearing Files & Enterprise File Servers",
+        desc: "Working with source clearing files received through enterprise file servers supporting Mastercard clearing-data workflows, verifying timely arrival and file integrity.",
+        tag: "Stage 01 • Upstream Ingestion"
+      },
+      {
+        title: "Apache NiFi Automated Ingestion Pipelines",
+        desc: "Supporting Apache NiFi ingestion flows, monitoring processor queues, backpressure, routing rules, and investigating ingestion-level failures.",
+        tag: "Stage 02 • Data Routing"
+      },
+      {
+        title: "Hadoop & Spark / PySpark Processing Workflows",
+        desc: "Supporting distributed batch execution across Hadoop (HDFS/YARN) and Spark/PySpark workflows, checking application logs, Spark job status, and resource allocation.",
+        tag: "Stage 03 • Distributed Compute"
+      },
+      {
+        title: "SQL Validation & Record-Level Reconciliation",
+        desc: "Performing data transformation, validation, and record-level checks using SQL to detect missing records, duplicates, and cross-stage discrepancies.",
+        tag: "Stage 04 • Quality Assurance"
+      },
+      {
+        title: "Downstream Delivery, Recovery & L2 Collaboration",
+        desc: "Ensuring downstream system dependencies are satisfied on schedule, executing controlled job reruns on failure, and collaborating with L2 and application support teams.",
+        tag: "Stage 05 • Production SLA"
+      }
+    ];
+
+    function selectExpStage(index) {
+      const stage = expStages[index];
+      if (!stage) return;
+
+      document.getElementById('exp-stage-title').textContent = stage.title;
+      document.getElementById('exp-stage-desc').textContent = stage.desc;
+      document.getElementById('exp-stage-tag').textContent = stage.tag;
+
+      document.querySelectorAll('.exp-stage-btn').forEach((btn, idx) => {
+        if (idx === index) {
+          btn.classList.remove('bg-void/70', 'border-white/10');
+          btn.classList.add('bg-void/90', 'border-cyanAccent/50', 'shadow-[0_0_25px_rgba(0,212,255,0.12)]');
+        } else {
+          btn.classList.add('bg-void/70', 'border-white/10');
+          btn.classList.remove('bg-void/90', 'border-cyanAccent/50', 'shadow-[0_0_25px_rgba(0,212,255,0.12)]');
+        }
+      });
+    }
+
+    const responsibilitiesData = [
+      { text: "Supporting enterprise-scale Mastercard clearing-data processing workflows.", tag: "Enterprise Workflow", icon: "credit-card" },
+      { text: "Working with source clearing files received through enterprise file servers.", tag: "File Ingestion", icon: "folder-input" },
+      { text: "Supporting Apache NiFi ingestion pipelines.", tag: "Apache NiFi", icon: "git-merge" },
+      { text: "Working with Hadoop and Spark/PySpark processing workflows.", tag: "Big Data Compute", icon: "cpu" },
+      { text: "Performing data transformation, validation, and record-level checks.", tag: "Data Quality", icon: "check-square" },
+      { text: "Monitoring scheduled batch-processing workflows.", tag: "Batch Ops", icon: "activity" },
+      { text: "Investigating production failures across ingestion, NiFi, Hadoop, and Spark.", tag: "Root Cause Analysis", icon: "search-code" },
+      { text: "Performing SQL validation for missing records, duplicates, and discrepancies.", tag: "SQL Validation", icon: "database-search" },
+      { text: "Analyzing application logs, Spark job status, and upstream/downstream dependencies.", tag: "Log Diagnostics", icon: "terminal" },
+      { text: "Supporting job recovery and controlled reruns.", tag: "Incident Recovery", icon: "rotate-ccw" },
+      { text: "Collaborating with L2 and application support teams.", tag: "Cross-Team Ops", icon: "users" }
+    ];
+
+    function renderResponsibilities() {
+      const container = document.getElementById('responsibilities-grid');
+      if (!container) return;
+
+      container.innerHTML = responsibilitiesData.map((item, idx) => `
+        <div class="glass-card rounded-2xl p-5 flex flex-col justify-between gap-4 group">
+          <div class="flex items-start justify-between gap-3">
+            <div class="w-9 h-9 rounded-xl bg-white/[0.04] border border-white/10 group-hover:border-cyanAccent/40 flex items-center justify-center shrink-0 transition-colors">
+              <i data-lucide="${item.icon}" class="w-4 h-4 text-cyanAccent"></i>
+            </div>
+            <span class="font-mono text-[10px] text-slate-500">0${idx + 1 < 10 ? idx + 1 : ''}${idx + 1 >= 10 ? idx + 1 : ''}</span>
+          </div>
+          <p class="text-sm text-slate-200 leading-relaxed font-medium">${item.text}</p>
+          <div class="pt-2 border-t border-white/[0.06] flex items-center justify-between">
+            <span class="font-mono text-[10px] text-purpleAccent uppercase tracking-wider">${item.tag}</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-cyanAccent/60 group-hover:bg-cyanAccent"></span>
+          </div>
+        </div>
+      `).join('');
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // ==================== 5. INTERACTIVE 3D SKILLS MATRIX ====================
+    const skillsData = [
+      // Programming
+      { name: "Python", category: "Programming", icon: "code-2", accent: "cyan", desc: "Data engineering scripts, PySpark ETL pipelines, automation, and ML workflows." },
+      { name: "SQL", category: "Programming", icon: "database", accent: "cyan", desc: "Complex analytical queries, record-level reconciliation, duplicate & discrepancy checks." },
+      // Big Data
+      { name: "Apache Spark", category: "Big Data", icon: "flame", accent: "purple", desc: "Distributed in-memory cluster computing for high-volume batch transformations." },
+      { name: "PySpark", category: "Big Data", icon: "zap", accent: "cyan", desc: "Distributed DataFrame transformations, schema validation, cleansing & feature engineering." },
+      { name: "Hadoop", category: "Big Data", icon: "server", accent: "purple", desc: "Enterprise distributed storage and batch processing ecosystem operations." },
+      { name: "HDFS", category: "Big Data", icon: "hard-drive", accent: "cyan", desc: "Distributed fault-tolerant file system management for large-scale clearing datasets." },
+      { name: "YARN", category: "Big Data", icon: "sliders", accent: "purple", desc: "Cluster resource scheduling, container monitoring, and Spark job execution diagnostics." },
+      // Workflow Orchestration
+      { name: "Apache Airflow", category: "Workflow Orchestration", icon: "workflow", accent: "cyan", desc: "DAG-based workflow scheduling, dependency management, retries, and batch orchestration." },
+      // Cloud
+      { name: "AWS S3", category: "Cloud", icon: "cloud", accent: "cyan", desc: "Multi-layer data lake storage (raw, processed, feature, and prediction zones)." },
+      { name: "AWS EC2", category: "Cloud", icon: "cpu", accent: "purple", desc: "Scalable cloud compute instances for data pipeline execution and containerized jobs." },
+      { name: "AWS IAM", category: "Cloud", icon: "key-round", accent: "cyan", desc: "Least-privilege roles, policies, and secure service-to-service access governance." },
+      { name: "AWS RDS", category: "Cloud", icon: "database-zap", accent: "purple", desc: "Managed relational database hosting for structured datasets and analytical serving." },
+      // Databases
+      { name: "PostgreSQL", category: "Databases", icon: "table-2", accent: "cyan", desc: "Relational data modeling, indexed prediction storage, and BI reporting queries." },
+      { name: "Oracle", category: "Databases", icon: "layers", accent: "purple", desc: "Enterprise relational database querying, validation, and production reconciliation." },
+      // Operating Systems
+      { name: "Linux", category: "Operating Systems", icon: "terminal", accent: "cyan", desc: "Production server administration, log inspection, process monitoring, and file operations." },
+      { name: "Unix", category: "Operating Systems", icon: "command", accent: "purple", desc: "Enterprise server environments, batch job execution, and file system permissions." },
+      { name: "Shell Scripting", category: "Operating Systems", icon: "file-terminal", accent: "cyan", desc: "Automated file checks, batch wrappers, log parsing, and operational utilities." },
+      // Tools
+      { name: "Apache NiFi", category: "Tools", icon: "git-merge", accent: "cyan", desc: "Automated enterprise file ingestion, routing, backpressure monitoring & flow recovery." },
+      { name: "Git", category: "Tools", icon: "git-branch", accent: "purple", desc: "Version control, branching workflows, and collaborative code management." },
+      { name: "Docker", category: "Tools", icon: "box", accent: "cyan", desc: "Containerized reproducible runtime environments for data pipelines and services." },
+      { name: "Jira", category: "Tools", icon: "kanban", accent: "purple", desc: "Agile sprint tracking, engineering task management, and release coordination." },
+      { name: "Remedy", category: "Tools", icon: "life-buoy", accent: "cyan", desc: "Enterprise IT incident tracking, production change management, and L2 escalation workflows." }
+    ];
+
+    function renderSkills(filterCategory) {
+      const grid = document.getElementById('skills-grid');
+      if (!grid) return;
+
+      const filtered = filterCategory === 'All'
+        ? skillsData
+        : skillsData.filter((s) => s.category === filterCategory);
+
+      grid.innerHTML = filtered.map((skill) => {
+        const borderHover = skill.accent === 'cyan' ? 'hover:border-cyanAccent/50' : 'hover:border-purpleAccent/50';
+        const iconColor = skill.accent === 'cyan' ? 'text-cyanAccent' : 'text-purpleAccent';
+        const badgeBg = skill.accent === 'cyan' ? 'bg-cyanAccent/10 text-cyanAccent' : 'bg-purpleAccent/10 text-purpleAccent';
+
+        return `
+          <div class="tilt-card glass-card rounded-2xl p-5 ${borderHover} cursor-default select-none">
+            <div class="tilt-inner flex flex-col h-full justify-between space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="w-10 h-10 rounded-xl bg-void border border-white/10 flex items-center justify-center">
+                  <i data-lucide="${skill.icon}" class="w-5 h-5 ${iconColor}"></i>
+                </div>
+                <span class="font-mono text-[10px] px-2.5 py-1 rounded-md ${badgeBg}">
+                  ${skill.category}
+                </span>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-white">${skill.name}</h3>
+                <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">${skill.desc}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      if (window.lucide) lucide.createIcons();
+      attachTiltEffects();
+    }
+
+    // Skill Category Tab Listeners
+    document.querySelectorAll('.skill-filter-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.skill-filter-btn').forEach((b) => {
+          b.classList.remove('active', 'bg-cyanAccent', 'text-void', 'font-semibold', 'shadow-lg', 'shadow-cyanAccent/20');
+          b.classList.add('bg-charcoal', 'text-slate-300', 'font-medium', 'border', 'border-white/10');
+        });
+        btn.classList.add('active', 'bg-cyanAccent', 'text-void', 'font-semibold', 'shadow-lg', 'shadow-cyanAccent/20');
+        btn.classList.remove('bg-charcoal', 'text-slate-300', 'font-medium', 'border', 'border-white/10');
+        renderSkills(btn.dataset.cat);
+      });
+    });
+
+    function attachTiltEffects() {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      document.querySelectorAll('.tilt-card').forEach((card) => {
+        card.addEventListener('mousemove', (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const centerX = rect.width / 2;
+          const centerY = rect.height / 2;
+          const rotateX = ((y - centerY) / centerY) * -8;
+          const rotateY = ((x - centerX) / centerX) * 8;
+          card.style.transform = `perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+        });
+
+        card.addEventListener('mouseleave', () => {
+          card.style.transform = 'perspective(900px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+        });
+      });
+    }
+
+    // ==================== 6. FEATURED PROJECT 10-STAGE INTERACTIVE PIPELINE ====================
+    const fraudPipelineNodes = [
+      {
+        step: "01",
+        name: "Transaction Sources",
+        tech: "Batch Transaction Feeds",
+        icon: "credit-card",
+        desc: "Ingests large-scale transaction records containing timestamps, amounts, merchant categories, and account identifiers for batch fraud evaluation.",
+        io: "Input: Raw Transaction Records → Output: Amazon S3 Raw Layer"
+      },
+      {
+        step: "02",
+        name: "Amazon S3 – Raw Layer",
+        tech: "AWS S3 Object Storage",
+        icon: "cloud",
+        desc: "Stores immutable raw transaction datasets partitioned by ingestion date, preserving source fidelity for auditability and reprocessing.",
+        io: "Input: Source Batch Files → Output: Partitioned S3 Raw Prefix"
+      },
+      {
+        step: "03",
+        name: "Apache Airflow",
+        tech: "DAG Orchestration",
+        icon: "workflow",
+        desc: "Orchestrates end-to-end pipeline task dependencies, triggers PySpark batch jobs on schedule, handles retries, and tracks SLA completion.",
+        io: "Input: Scheduled Trigger → Output: Coordinated ETL & ML Tasks"
+      },
+      {
+        step: "04",
+        name: "PySpark Processing",
+        tech: "Distributed Spark Engine",
+        icon: "zap",
+        desc: "Executes distributed Python/PySpark transformations across large transaction partitions to standardize data types and normalize fields.",
+        io: "Input: S3 Raw Layer → Output: Distributed Spark DataFrames"
+      },
+      {
+        step: "05",
+        name: "Data Cleaning & Validation",
+        tech: "Schema & Quality Rules",
+        icon: "shield-check",
+        desc: "Enforces strict schema validation, filters corrupt records, handles missing values, and removes duplicate transaction IDs into the S3 Processed Layer.",
+        io: "Input: Raw DataFrames → Output: S3 Processed Layer"
+      },
+      {
+        step: "06",
+        name: "Feature Engineering",
+        tech: "PySpark Aggregations",
+        icon: "sliders",
+        desc: "Computes behavioral transaction aggregations, velocity metrics, rolling spend windows, and risk indicators persisted in the S3 Feature Layer.",
+        io: "Input: S3 Processed Layer → Output: S3 Feature Layer"
+      },
+      {
+        step: "07",
+        name: "Random Forest Model",
+        tech: "ML Classification",
+        icon: "brain-circuit",
+        desc: "Applies a trained Random Forest classifier over engineered transaction features to score fraudulent vs. legitimate transaction probability.",
+        io: "Input: Engineered Feature Vectors → Output: Fraud Risk Scores"
+      },
+      {
+        step: "08",
+        name: "Fraud Predictions",
+        tech: "S3 Prediction Layer",
+        icon: "alert-triangle",
+        desc: "Persists scored transaction outputs and binary fraud flags into a dedicated Amazon S3 prediction layer for downstream database loading.",
+        io: "Input: Scored DataFrames → Output: S3 Prediction Layer"
+      },
+      {
+        step: "09",
+        name: "PostgreSQL",
+        tech: "Relational Serving DB",
+        icon: "database",
+        desc: "Loads curated fraud prediction results into indexed PostgreSQL tables optimized for fast SQL filtering, auditing, and investigation.",
+        io: "Input: S3 Prediction Layer → Output: Indexed PostgreSQL Tables"
+      },
+      {
+        step: "10",
+        name: "Analytics Dashboard",
+        tech: "SQL Reporting & BI",
+        icon: "bar-chart-3",
+        desc: "Enables analytical SQL querying and visual reporting on flagged transactions, merchant risk trends, and batch pipeline health.",
+        io: "Input: PostgreSQL Queries → Output: Fraud Risk Reports"
+      }
+    ];
+
+    function renderFraudPipeline() {
+      const container = document.getElementById('fraud-pipeline-nodes');
+      if (!container) return;
+
+      container.innerHTML = fraudPipelineNodes.map((node, idx) => `
+        <button onclick="selectFraudNode(${idx})" id="fnode-card-${idx}" class="fnode-card text-left p-4 rounded-2xl border transition-all relative overflow-hidden ${idx === 0 ? 'bg-void border-cyanAccent shadow-[0_0_20px_rgba(0,212,255,0.18)]' : 'bg-void/70 border-white/10 hover:border-cyanAccent/40'}">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-mono text-[10px] ${idx === 0 ? 'text-cyanAccent font-bold' : 'text-slate-500'}">NODE ${node.step}</span>
+            <i data-lucide="${node.icon}" class="w-4 h-4 ${idx >= 5 ? 'text-purpleAccent' : 'text-cyanAccent'}"></i>
+          </div>
+          <div class="text-xs sm:text-sm font-bold text-white leading-snug">${node.name}</div>
+          <div class="font-mono text-[10px] text-slate-400 mt-1 truncate">${node.tech}</div>
+          ${idx < fraudPipelineNodes.length - 1 ? `
+            <div class="mt-3 h-[2px] w-full bg-white/10 relative overflow-hidden rounded-full">
+              <div class="w-6 h-full bg-gradient-to-r from-cyanAccent to-purpleAccent data-packet-h" style="animation-delay: ${idx * 0.22}s;"></div>
+            </div>
+          ` : `
+            <div class="mt-3 h-[2px] w-full bg-emerald-400/40 rounded-full"></div>
+          `}
+        </button>
+      `).join('');
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function selectFraudNode(index) {
+      const node = fraudPipelineNodes[index];
+      if (!node) return;
+
+      document.getElementById('fnode-badge').textContent = `STEP ${node.step} / 10`;
+      document.getElementById('fnode-title').textContent = node.name;
+      document.getElementById('fnode-tech').textContent = node.tech;
+      document.getElementById('fnode-desc').textContent = node.desc;
+      document.getElementById('fnode-io').textContent = node.io;
+
+      document.querySelectorAll('.fnode-card').forEach((card, idx) => {
+        if (idx === index) {
+          card.classList.remove('bg-void/70', 'border-white/10');
+          card.classList.add('bg-void', 'border-cyanAccent', 'shadow-[0_0_20px_rgba(0,212,255,0.18)]');
+        } else {
+          card.classList.add('bg-void/70', 'border-white/10');
+          card.classList.remove('bg-void', 'border-cyanAccent', 'shadow-[0_0_20px_rgba(0,212,255,0.18)]');
+        }
+      });
+    }
+
+    // ==================== 7. MODALS, COPY & CONTACT FORM ====================
+    function openArchitectureModal() {
+      const modal = document.getElementById('architecture-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeArchitectureModal() {
+      const modal = document.getElementById('architecture-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.body.style.overflow = '';
+    }
+
+    function openResumeModal() {
+      const modal = document.getElementById('resume-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeResumeModal() {
+      const modal = document.getElementById('resume-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.body.style.overflow = '';
+    }
+
+    function downloadHtmlResume() {
+      const resumeContent = document.getElementById('printable-resume-area').innerHTML;
+      const fullHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Surya V - Data Engineer Resume</title>
+<script src="https://cdn.tailwindcss.com"><\/script>
+</head>
+<body class="bg-slate-100 p-8 font-sans">
+<div class="max-w-3xl mx-auto bg-white p-10 rounded-xl shadow">
+${resumeContent}
+</div>
+</body>
+</html>`;
+      const blob = new Blob([fullHtml], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Surya_V_Data_Engineer_Resume.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Resume downloaded! Tip: Use "Save as PDF" for PDF format.');
+    }
+
+    function copyText(text, label) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(`${label} copied to clipboard`);
+      }).catch(() => {
+        showToast(`${label}: ${text}`);
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast-notification');
+      const toastMsg = document.getElementById('toast-message');
+      if (!toast || !toastMsg) return;
+
+      toastMsg.textContent = msg;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 3000);
+    }
+
+    function initContactForm() {
+      const form = document.getElementById('contact-form');
+      const feedback = document.getElementById('form-feedback');
+      const submitBtn = document.getElementById('contact-submit-btn');
+      if (!form) return;
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('contact-name').value.trim();
+        const email = document.getElementById('contact-email').value.trim();
+        const subject = document.getElementById('contact-subject').value.trim();
+        const message = document.getElementById('contact-message').value.trim();
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!name || !email || !subject || !message) {
+          feedback.className = 'rounded-xl p-3.5 text-xs font-medium bg-rose-500/15 border border-rose-500/30 text-rose-300';
+          feedback.textContent = 'Please complete all required fields before sending.';
+          feedback.classList.remove('hidden');
+          return;
+        }
+
+        if (!emailRegex.test(email)) {
+          feedback.className = 'rounded-xl p-3.5 text-xs font-medium bg-rose-500/15 border border-rose-500/30 text-rose-300';
+          feedback.textContent = 'Please enter a valid email address.';
+          feedback.classList.remove('hidden');
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>Dispatching Message...</span>';
+
+        setTimeout(() => {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i><span>Send Message</span>';
+          if (window.lucide) lucide.createIcons();
+
+          feedback.className = 'rounded-xl p-3.5 text-xs font-medium bg-emerald-500/15 border border-emerald-500/30 text-emerald-300';
+          feedback.innerHTML = `Thank you, <strong>${name}</strong>! Your message regarding "<em>${subject}</em>" has been queued. You can also reach Surya V directly at <a href="mailto:developer.surya03@gmail.com" class="underline text-cyanAccent">developer.surya03@gmail.com</a>.`;
+          feedback.classList.remove('hidden');
+          form.reset();
+        }, 700);
+      });
+    }
+
+    // Close modals on Escape key
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeArchitectureModal();
+        closeResumeModal();
+      }
+    });
+
+    // ==================== 8. THREE.JS 3D ENVIRONMENTS (ON WINDOW LOAD) ====================
+    window.addEventListener('load', () => {
+      if (typeof THREE === 'undefined') return;
+      initHero3DScene();
+      initAbout3DScene();
+      initContact3DScene();
+    });
+
+    // --- A. HERO 3D DISTRIBUTED DATA PROCESSING ENVIRONMENT ---
+    function initHero3DScene() {
+      const container = document.getElementById('hero-3d-container');
+      if (!container) return;
+
+      const isMobile = window.innerWidth < 768;
+      const scene = new THREE.Scene();
+      scene.fog = new THREE.FogExp2(0x050505, 0.032);
+
+      const camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.1, 100);
+      camera.position.set(0, 1.5, isMobile ? 16 : 13);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: !isMobile, alpha: true, powerPreference: 'high-performance' });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(renderer.domElement);
+
+      // Lights
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
+      scene.add(ambientLight);
+
+      const cyanLight = new THREE.PointLight(0x00D4FF, 2.5, 35);
+      cyanLight.position.set(5, 4, 6);
+      scene.add(cyanLight);
+
+      const purpleLight = new THREE.PointLight(0x8B5CF6, 2.2, 35);
+      purpleLight.position.set(-6, -3, 4);
+      scene.add(purpleLight);
+
+      // Master Cluster Group
+      const clusterGroup = new THREE.Group();
+      scene.add(clusterGroup);
+
+      // 1. Central Glowing Data Processing Core
+      const coreGeo = new THREE.IcosahedronGeometry(1.65, 1);
+      const coreMat = new THREE.MeshStandardMaterial({
+        color: 0x081520,
+        emissive: 0x00D4FF,
+        emissiveIntensity: 0.45,
+        roughness: 0.25,
+        metalness: 0.85,
+        flatShading: true
+      });
+      const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+      clusterGroup.add(coreMesh);
+
+      const wireGeo = new THREE.IcosahedronGeometry(1.9, 1);
+      const wireMat = new THREE.MeshBasicMaterial({ color: 0x00D4FF, wireframe: true, transparent: true, opacity: 0.35 });
+      const wireMesh = new THREE.Mesh(wireGeo, wireMat);
+      clusterGroup.add(wireMesh);
+
+      // Orbital Gyroscope Rings around Core
+      const ring1 = new THREE.Mesh(
+        new THREE.TorusGeometry(2.7, 0.025, 16, 100),
+        new THREE.MeshBasicMaterial({ color: 0x00D4FF, transparent: true, opacity: 0.45 })
+      );
+      ring1.rotation.x = Math.PI / 3;
+      clusterGroup.add(ring1);
+
+      const ring2 = new THREE.Mesh(
+        new THREE.TorusGeometry(3.2, 0.02, 16, 100),
+        new THREE.MeshBasicMaterial({ color: 0x8B5CF6, transparent: true, opacity: 0.4 })
+      );
+      ring2.rotation.y = Math.PI / 4;
+      clusterGroup.add(ring2);
+
+      // 2. Floating Server Nodes & Database Cylinders
+      const nodeCount = isMobile ? 6 : 10;
+      const nodes = [];
+      const packetSystems = [];
+
+      const serverGeo = new THREE.BoxGeometry(0.65, 0.85, 0.65);
+      const dbGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.8, 16);
+
+      for (let i = 0; i < nodeCount; i++) {
+        const angle = (i / nodeCount) * Math.PI * 2;
+        const radius = (isMobile ? 5.2 : 6.4) + (i % 2) * 1.4;
+        const yOffset = Math.sin(i * 1.7) * 2.4;
+
+        const isDb = i % 2 === 0;
+        const mat = new THREE.MeshStandardMaterial({
+          color: 0x101114,
+          emissive: isDb ? 0x00D4FF : 0x8B5CF6,
+          emissiveIntensity: 0.35,
+          metalness: 0.8,
+          roughness: 0.3
+        });
+
+        const mesh = new THREE.Mesh(isDb ? dbGeo : serverGeo, mat);
+        mesh.position.set(Math.cos(angle) * radius, yOffset, Math.sin(angle) * radius);
+
+        // Wireframe outline on each node
+        const edges = new THREE.EdgesGeometry(isDb ? dbGeo : serverGeo);
+        const line = new THREE.LineSegments(
+          edges,
+          new THREE.LineBasicMaterial({ color: isDb ? 0x00D4FF : 0x8B5CF6, transparent: true, opacity: 0.65 })
+        );
+        mesh.add(line);
+
+        clusterGroup.add(mesh);
+        nodes.push({ mesh, basePos: mesh.position.clone(), phase: i * 0.8 });
+
+        // Curved Network Spline connecting Node to Core
+        const midPoint = mesh.position.clone().multiplyScalar(0.5);
+        midPoint.y += (i % 2 === 0 ? 1.2 : -1.2);
+        const curve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(0, 0, 0), midPoint, mesh.position.clone());
+        const curvePoints = curve.getPoints(32);
+        const lineGeo = new THREE.BufferGeometry().setFromPoints(curvePoints);
+        const lineMat = new THREE.LineBasicMaterial({
+          color: isDb ? 0x00D4FF : 0x8B5CF6,
+          transparent: true,
+          opacity: 0.22
+        });
+        const splineLine = new THREE.Line(lineGeo, lineMat);
+        clusterGroup.add(splineLine);
+
+        // Animated Data Particle traveling along Spline
+        const packetMesh = new THREE.Mesh(
+          new THREE.SphereGeometry(0.09, 8, 8),
+          new THREE.MeshBasicMaterial({ color: isDb ? 0x00D4FF : 0xC084FC })
+        );
+        clusterGroup.add(packetMesh);
+        packetSystems.push({
+          mesh: packetMesh,
+          curve,
+          progress: Math.random(),
+          speed: 0.004 + Math.random() * 0.004,
+          reverse: i % 2 === 1
+        });
+      }
+
+      // 3. Ambient Background Data Dust Particles
+      const starCount = isMobile ? 180 : 420;
+      const starGeo = new THREE.BufferGeometry();
+      const starPositions = new Float32Array(starCount * 3);
+      for (let i = 0; i < starCount * 3; i++) {
+        starPositions[i] = (Math.random() - 0.5) * 38;
+      }
+      starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+      const starMat = new THREE.PointsMaterial({ color: 0x00D4FF, size: 0.07, transparent: true, opacity: 0.45 });
+      const starField = new THREE.Points(starGeo, starMat);
+      scene.add(starField);
+
+      // Mouse & Touch Parallax Interaction
+      let targetRotX = 0, targetRotY = 0;
+      let isDragging = false, prevX = 0, prevY = 0, dragRotY = 0, dragRotX = 0;
+
+      window.addEventListener('mousemove', (e) => {
+        const nx = (e.clientX / window.innerWidth) * 2 - 1;
+        const ny = (e.clientY / window.innerHeight) * 2 - 1;
+        targetRotY = nx * 0.35;
+        targetRotX = ny * 0.2;
+
+        if (isDragging) {
+          dragRotY += (e.clientX - prevX) * 0.006;
+          dragRotX += (e.clientY - prevY) * 0.006;
+          prevX = e.clientX;
+          prevY = e.clientY;
+        }
+      }, { passive: true });
+
+      container.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        prevX = e.clientX;
+        prevY = e.clientY;
+      });
+      window.addEventListener('mouseup', () => { isDragging = false; });
+
+      container.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+          isDragging = true;
+          prevX = e.touches[0].clientX;
+          prevY = e.touches[0].clientY;
+        }
+      }, { passive: true });
+
+      container.addEventListener('touchmove', (e) => {
+        if (isDragging && e.touches.length === 1) {
+          dragRotY += (e.touches[0].clientX - prevX) * 0.007;
+          dragRotX += (e.touches[0].clientY - prevY) * 0.007;
+          prevX = e.touches[0].clientX;
+          prevY = e.touches[0].clientY;
+        }
+      }, { passive: true });
+
+      container.addEventListener('touchend', () => { isDragging = false; });
+
+      // Resize Handler
+      window.addEventListener('resize', () => {
+        if (!container) return;
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+      });
+
+      // Animation Loop
+      const clock = new THREE.Clock();
+      function animate() {
+        requestAnimationFrame(animate);
+        const elapsed = clock.getElapsedTime();
+
+        coreMesh.rotation.y = elapsed * 0.35;
+        coreMesh.rotation.x = Math.sin(elapsed * 0.3) * 0.2;
+        wireMesh.rotation.y = -elapsed * 0.25;
+        ring1.rotation.z = elapsed * 0.4;
+        ring2.rotation.x = elapsed * 0.3;
+
+        // Float nodes gently
+        nodes.forEach((n) => {
+          n.mesh.position.y = n.basePos.y + Math.sin(elapsed * 1.4 + n.phase) * 0.22;
+          n.mesh.rotation.y += 0.008;
+        });
+
+        // Move data packets along splines
+        packetSystems.forEach((p) => {
+          p.progress += p.speed;
+          if (p.progress > 1) p.progress = 0;
+          const t = p.reverse ? 1 - p.progress : p.progress;
+          const pt = p.curve.getPoint(t);
+          p.mesh.position.copy(pt);
+        });
+
+        starField.rotation.y = elapsed * 0.02;
+
+        // Smooth camera/cluster interpolation
+        clusterGroup.rotation.y += ((elapsed * 0.08 + targetRotY + dragRotY) - clusterGroup.rotation.y) * 0.05;
+        clusterGroup.rotation.x += ((targetRotX + dragRotX) - clusterGroup.rotation.x) * 0.05;
+
+        renderer.render(scene, camera);
+      }
+      animate();
+    }
+
+    // --- B. ABOUT SECTION INTERACTIVE 3D DATA ENGINEERING CUBE ---
+    function initAbout3DScene() {
+      const container = document.getElementById('about-3d-container');
+      if (!container) return;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+      camera.position.set(0, 0, 7.5);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(renderer.domElement);
+
+      const light1 = new THREE.PointLight(0x00D4FF, 2, 20);
+      light1.position.set(4, 4, 5);
+      scene.add(light1);
+
+      const light2 = new THREE.PointLight(0x8B5CF6, 2, 20);
+      light2.position.set(-4, -3, 4);
+      scene.add(light2);
+
+      const group = new THREE.Group();
+      scene.add(group);
+
+      // Stacked Data Lakehouse Layers (3D Plates)
+      const layerColors = [0x00D4FF, 0x38BDF8, 0x8B5CF6, 0x10B981];
+      const layers = [];
+      for (let i = 0; i < 4; i++) {
+        const geo = new THREE.BoxGeometry(2.6 - i * 0.15, 0.22, 2.6 - i * 0.15);
+        const mat = new THREE.MeshStandardMaterial({
+          color: 0x101114,
+          emissive: layerColors[i],
+          emissiveIntensity: 0.3,
+          metalness: 0.7,
+          roughness: 0.25
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.y = (i - 1.5) * 0.85;
+
+        const edges = new THREE.LineSegments(
+          new THREE.EdgesGeometry(geo),
+          new THREE.LineBasicMaterial({ color: layerColors[i], transparent: true, opacity: 0.8 })
+        );
+        mesh.add(edges);
+        group.add(mesh);
+        layers.push(mesh);
+      }
+
+      // Vertical Data Pipeline Pillars
+      const pillarPositions = [[-1, -1], [1, -1], [-1, 1], [1, 1]];
+      pillarPositions.forEach(([x, z]) => {
+        const pGeo = new THREE.CylinderGeometry(0.03, 0.03, 3.2, 8);
+        const pMat = new THREE.MeshBasicMaterial({ color: 0x00D4FF, transparent: true, opacity: 0.35 });
+        const pillar = new THREE.Mesh(pGeo, pMat);
+        pillar.position.set(x, 0, z);
+        group.add(pillar);
+      });
+
+      // Drag to Rotate
+      let dragging = false, prevX = 0, prevY = 0;
+      container.addEventListener('mousedown', (e) => { dragging = true; prevX = e.clientX; prevY = e.clientY; });
+      window.addEventListener('mouseup', () => { dragging = false; });
+      window.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        group.rotation.y += (e.clientX - prevX) * 0.01;
+        group.rotation.x += (e.clientY - prevY) * 0.01;
+        prevX = e.clientX;
+        prevY = e.clientY;
+      });
+
+      container.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) { dragging = true; prevX = e.touches[0].clientX; prevY = e.touches[0].clientY; }
+      }, { passive: true });
+      container.addEventListener('touchmove', (e) => {
+        if (dragging && e.touches.length === 1) {
+          group.rotation.y += (e.touches[0].clientX - prevX) * 0.01;
+          group.rotation.x += (e.touches[0].clientY - prevY) * 0.01;
+          prevX = e.touches[0].clientX;
+          prevY = e.touches[0].clientY;
+        }
+      }, { passive: true });
+      container.addEventListener('touchend', () => { dragging = false; });
+
+      window.addEventListener('resize', () => {
+        if (!container) return;
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+      });
+
+      const clock = new THREE.Clock();
+      function animate() {
+        requestAnimationFrame(animate);
+        const t = clock.getElapsedTime();
+        if (!dragging) {
+          group.rotation.y += 0.007;
+          group.rotation.x = Math.sin(t * 0.6) * 0.25 + 0.35;
+        }
+        layers.forEach((layer, idx) => {
+          layer.position.y = (idx - 1.5) * 0.85 + Math.sin(t * 2 + idx) * 0.06;
+        });
+        renderer.render(scene, camera);
+      }
+      animate();
+    }
+
+    // --- C. CONTACT SUBTLE 3D NETWORK PARTICLES ---
+    function initContact3DScene() {
+      const container = document.getElementById('contact-3d-container');
+      if (!container) return;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 100);
+      camera.position.z = 12;
+
+      const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      container.appendChild(renderer.domElement);
+
+      const count = 90;
+      const geo = new THREE.BufferGeometry();
+      const pos = new Float32Array(count * 3);
+      for (let i = 0; i < count * 3; i++) {
+        pos[i] = (Math.random() - 0.5) * 24;
+      }
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const mat = new THREE.PointsMaterial({ color: 0x8B5CF6, size: 0.12, transparent: true, opacity: 0.5 });
+      const points = new THREE.Points(geo, mat);
+      scene.add(points);
+
+      window.addEventListener('resize', () => {
+        if (!container) return;
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+      });
+
+      function animate() {
+        requestAnimationFrame(animate);
+        points.rotation.y += 0.0015;
+        points.rotation.x += 0.0008;
+        renderer.render(scene, camera);
+      }
+      animate();
+    }
+  </script>
+</body>
+</html>
